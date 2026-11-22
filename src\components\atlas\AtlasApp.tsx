@@ -9,13 +9,12 @@ import { derive, ancestorsOf, descendantsOf, findPath } from "@/lib/genealogy/de
 import { computeLayout, CARD_H, CARD_W } from "@/lib/genealogy/layout";
 import { loadDataset, saveDataset, seedDataset } from "@/lib/genealogy/store";
 import type { Dataset } from "@/lib/genealogy/types";
-import { APP_CONFIG, viewportKeyFor } from "@/lib/app-config";
+import { APP_CONFIG } from "@/lib/app-config";
 import { nodeTypes, BRANCH_LABEL_W, BRANCH_LABEL_H, GEN_LABEL_H, type PersonNodeData } from "./nodes";
 import { PersonPanel } from "./PersonPanel";
 import { Toolbar } from "./Toolbar";
 
 const PALETTE = ["var(--branch-1)", "var(--branch-2)", "var(--branch-3)", "var(--branch-4)"];
-const VP_KEY = viewportKeyFor(APP_CONFIG.id);
 type Mode = { kind: "none" } | { kind: "anc" | "desc" | "root" | "path"; ids: string[]; label: string };
 
 export default function AtlasApp() {
@@ -43,16 +42,14 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
   const [selApp, setSelApp] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>({ kind: "none" });
   const [pathFrom, setPathFrom] = useState<string | null>(null);
-  // Keep all records in Atlas, but show only the component connected to the
-  // selected central person at first. The branch filter can reveal the rest.
-  const [hidden, setHidden] = useState<Set<string>>(() => new Set(["Sin conexión"]));
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [zoomLvl, setZoomLvl] = useState<"far" | "mid" | "near">("mid");
   const flagged = useMemo(() => { const s = new Set<string>(); for (const i of d.issues) if (i.severity !== "info") i.ids.forEach((x) => s.add(x)); return s; }, [d]);
 
   const appBranch = useMemo(() => {
     const m = new Map<string, string>(); const byKey = new Map(layout.apps.map((a) => [a.key, a]));
     for (const a of layout.apps) {
-      if (a.group === "pending") { m.set(a.key, d.connected.has(a.personId) ? "Conexión lateral" : "Sin conexión"); continue; }
+      if (a.group === "pending") { m.set(a.key, "Sin conexión"); continue; }
       if (a.depth === 0) { m.set(a.key, "Central"); continue; }
       if (a.depth === 1) { m.set(a.key, "Padres"); continue; }
       let x = a; while (x.depth > 2) x = byKey.get(x.childKey!)!;
@@ -95,36 +92,32 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
   }, [layout]);
   const appPerson = useMemo(() => new Map(layout.apps.map((a) => [a.key, a.personId])), [layout]);
   const unionByKey = useMemo(() => new Map(layout.unions.map((u) => [u.key, u])), [layout]);
-  const nodes = useMemo(() => baseNodes.flatMap((n) => {
+  const nodes = useMemo(() => baseNodes.map((n) => {
     if (n.type !== "person") {
-      if (n.type === "blabel") return hidden.has(n.data.label) ? [] : [n];
-      if (n.type === "union") { const u = unionByKey.get(n.id); return u && (hidden.has(appBranch.get(u.childKey)!) || u.parentKeys.some((k) => hidden.has(appBranch.get(k)!))) ? [] : [n]; }
-      return [n];
+      if (n.type === "blabel") return { ...n, hidden: hidden.has(n.data.label) };
+      if (n.type === "union") { const u = unionByKey.get(n.id); return u && hidden.has(appBranch.get(u.childKey)!) && u.parentKeys.every((k) => hidden.has(appBranch.get(k)!)) ? { ...n, hidden: true } : n; }
+      return n;
     }
-    if (hidden.has(appBranch.get(n.id)!)) return [];
     const pid = appPerson.get(n.id)!;
     const cls = [hl.has(pid) ? "hl" : "", selApp === n.id || (selected === pid && !selApp) ? "sel" : selected === pid ? "hl" : ""].join(" ").trim();
-    return [cls ? { ...n, className: cls } : n];
+    const hide = hidden.has(appBranch.get(n.id)!);
+    return cls || hide ? { ...n, className: cls, hidden: hide } : n;
   }), [baseNodes, hl, selected, selApp, hidden, appBranch, appPerson, unionByKey]);
-  const visibleNodeIds = useMemo(() => new Set(nodes.map((n) => n.id)), [nodes]);
   const edges = useMemo(() => {
-    const visibleEdges = baseEdges.filter((e) => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target));
-    if (!hl.size) return visibleEdges;
-    return visibleEdges.map((e) => {
+    if (!hl.size) return baseEdges;
+    return baseEdges.map((e) => {
       const s = appPerson.get(e.source) ?? null, t = appPerson.get(e.target) ?? null;
       const ok = (x: string | null, key: string) => (x ? hl.has(x) : (() => { const u = unionByKey.get(key); return !!u && hl.has(appPerson.get(u.childKey)!) && u.parentKeys.some((k) => hl.has(appPerson.get(k)!)); })());
       return ok(s, e.source) && ok(t, e.target) ? { ...e, className: "hl" } : e;
     });
-  }, [baseEdges, visibleNodeIds, hl, appPerson, unionByKey]);
+  }, [baseEdges, hl, appPerson, unionByKey]);
 
   const goTo = useCallback((pid: string, appKey?: string) => {
     const apps = layout.byPerson.get(pid); if (!apps?.length) return;
     const a = (appKey && apps.find((x) => x.key === appKey)) || apps.find((x) => !x.isRef) || apps[0];
-    const branch = appBranch.get(a.key);
-    if (branch && hidden.has(branch)) setHidden(new Set([...hidden].filter((value) => value !== branch)));
     setSelected(pid); setSelApp(a.key);
     rf.setCenter(a.x + CARD_W / 2, a.y, { zoom: Math.max(rf.getZoom(), 0.9), duration: 900 });
-  }, [layout, rf, appBranch, hidden]);
+  }, [layout, rf]);
   const fitAll = useCallback(() => rf.fitView({ duration: 900, padding: { top: "140px", bottom: "24px", left: "24px", right: "24px" }, minZoom: 0.005 }), [rf]);
   const goRoot = useCallback(() => goTo(ds.meta.root), [goTo, ds.meta.root]);
   const prevRoot = useRef(ds.meta.root);
@@ -138,20 +131,9 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
     rf.fitBounds({ x: c.x - 40, y: c.minY - 400, width: CARD_W + 80, height: c.maxY - c.minY + 800 }, { duration: 900, padding: 0.05 });
   }, [layout, rf]);
 
-  const initialVp = useRef<Viewport | null>((() => { try { return JSON.parse(sessionStorage.getItem(VP_KEY) ?? "null"); } catch { return null; } })());
   const onInit = useCallback(() => {
-    const roots = layout.byPerson.get(ds.meta.root);
-    const root = roots?.find((a) => !a.isRef) ?? roots?.[0];
-    const centerRoot = () => { if (root) rf.setCenter(root.x + CARD_W / 2, root.y, { zoom: 0.75 }); };
-    if (!initialVp.current) { centerRoot(); return; }
-    void rf.setViewport(initialVp.current).then(() => {
-      // A saved view can point at a disconnected branch, which is hidden again
-      // on startup. Recover to the central person only when the viewport would
-      // otherwise show no person cards at all.
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        if (!document.querySelector(".react-flow__node-person")) centerRoot();
-      }));
-    });
+    const r = layout.byPerson.get(ds.meta.root)?.[0];
+    if (r) rf.setCenter(r.x + CARD_W / 2, r.y, { zoom: 0.75 });
   }, [rf, layout, ds.meta.root]);
   const onMove = useCallback((_: unknown, vp: Viewport) => {
     const lvl = vp.zoom < 0.22 ? "far" : vp.zoom < 0.6 ? "mid" : "near";
@@ -176,12 +158,11 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
   };
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-canvas" data-testid="atlas-canvas" data-zoom={zoomLvl}>
+    <div className="relative h-dvh w-full overflow-hidden bg-canvas" data-zoom={zoomLvl}>
       <ReactFlow
         className={`atlas-flow${hl.size ? " dimmed" : ""}`}
         nodes={nodes} edges={edges} nodeTypes={nodeTypes}
         onInit={onInit} onMove={onMove}
-        onMoveEnd={(_, vp) => sessionStorage.setItem(VP_KEY, JSON.stringify(vp))}
         onNodeClick={(_, n) => { if (n.type === "person") { setSelected(appPerson.get(n.id)!); setSelApp(n.id); } }}
         onPaneClick={() => setSelApp(null)}
         minZoom={0.005} maxZoom={2.5} onlyRenderVisibleElements nodesDraggable={false} nodesConnectable={false}

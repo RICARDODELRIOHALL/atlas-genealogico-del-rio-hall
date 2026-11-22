@@ -44,15 +44,6 @@ export function computeLayout(d: Derived, root: string): LayoutResult {
   };
   const roots: Appearance[] = [];
   if (d.byId.has(root)) { const r = mk(root, 0, null, "main"); roots.push(r); expandBFS([r]); }
-  // Registros sin ruta demostrable: árboles aparte, empezando por quienes no tienen hijos registrados
-  const pendingRoots: Appearance[] = [];
-  for (const p of d.byId.values()) {
-    if (expanded.has(p.id) || d.generation.has(p.id)) continue;
-    const kids = (d.children.get(p.id) ?? []).filter((c) => !d.generation.has(c));
-    if (kids.length === 0) pendingRoots.push(mk(p.id, 0, null, "pending"));
-  }
-  expandBFS(pendingRoots);
-  for (const p of d.byId.values()) if (!byPerson.has(p.id)) { const a = mk(p.id, 0, null, "pending"); pendingRoots.push(a); expandBFS([a]); }
 
   // Contornos (tipo Reingold–Tilford) por columna: parejas juntas salvo que sus ascendientes lo impidan
   type Contour = { top: number[]; bot: number[] };
@@ -83,7 +74,7 @@ export function computeLayout(d: Derived, root: string): LayoutResult {
     a.y = y; a.x = a.depth * COL_W;
     for (const k of a.parentKeys) place(apps.get(k)!, y + offsets.get(k)!);
   };
-  let cursor = 0; let pendingTop: number | null = null;
+  let cursor = 0; const pendingTop: number | null = null;
   const placeRoot = (r: Appearance, first: boolean) => {
     const c = contour(r);
     const minTop = Math.min(...c.top);
@@ -92,8 +83,6 @@ export function computeLayout(d: Derived, root: string): LayoutResult {
     cursor = y + Math.max(...c.bot) + GAP * 2;
   };
   for (const r of roots) placeRoot(r, true);
-  if (pendingRoots.length) { cursor += 400; pendingTop = cursor - 120; }
-  for (const r of pendingRoots) placeRoot(r, false);
 
   const list = [...apps.values()];
   const unions: LayoutResult["unions"] = [];

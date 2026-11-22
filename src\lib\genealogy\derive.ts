@@ -3,7 +3,7 @@ import type { Dataset, Derived, Issue, ParentLink, Person, Union } from "./types
 
 /** Etiquetas de rama por abuelo/a de la persona central (solo etiquetas; la estructura sale de los datos). */
 export const BRANCH_LABELS: Record<string, string> = {};
-export const DERIVED_KINDS = new Set(["varias generaciones", "sin conexión", "rama lateral conectada", "cronología", "ciclo", "más de dos progenitores", "rol/sexo"]);
+export const DERIVED_KINDS = new Set(["varias generaciones", "sin conexión", "cronología", "ciclo", "más de dos progenitores", "rol/sexo"]);
 
 export function year(s?: string): number | null {
   const m = (s ?? "").match(/(1[0-9]{3}|20[0-2][0-9])/);
@@ -97,23 +97,6 @@ export function derive(ds: Dataset): Derived {
     }
     for (const [k, s] of gsets) generation.set(k, [...s].sort((a, b) => a - b));
   }
-  // Connectivity is undirected across documented parent/child links. A person
-  // outside the direct ancestor generations can still be a sibling/cousin on
-  // a connected side branch and should not be labelled as a separate family.
-  const connected = new Set<string>();
-  if (byId.has(root)) {
-    const queue = [root]; connected.add(root);
-    for (let i = 0; i < queue.length; i++) {
-      const id = queue[i]!;
-      const neighbors = [
-        ...(parents.get(id) ?? []).map((link) => link.parent),
-        ...(children.get(id) ?? []),
-      ];
-      for (const neighbor of neighbors) if (!connected.has(neighbor)) {
-        connected.add(neighbor); queue.push(neighbor);
-      }
-    }
-  }
   // Ramas por cuadrante de abuelos
   const branches = new Map<string, string[]>();
   const bsets = new Map<string, Set<string>>();
@@ -129,12 +112,9 @@ export function derive(ds: Dataset): Derived {
   for (const p of ds.persons) {
     if (p.id === root) branches.set(p.id, ["Central"]);
     else if ((parents.get(root) ?? []).some((l) => l.parent === p.id)) branches.set(p.id, ["Padres"]);
-    else if (!connected.has(p.id)) branches.set(p.id, ["Sin conexión"]);
-    else if (!generation.has(p.id) && !(bsets.get(p.id)?.size)) branches.set(p.id, ["Conexión lateral"]);
     else branches.set(p.id, [...(bsets.get(p.id) ?? [])].sort());
     const gs = generation.get(p.id);
-    if (!connected.has(p.id)) issues.push({ kind: "sin conexión", severity: "revisión", ids: [p.id], msg: `${p.fsId} ${p.name} no tiene ruta parental demostrable hasta la persona central; se conserva como componente separado.` });
-    else if (!gs) issues.push({ kind: "rama lateral conectada", severity: "info", ids: [p.id], msg: `${p.fsId} ${p.name} tiene una ruta parental hasta la persona central fuera de su ascendencia directa.` });
+    if (!gs) issues.push({ kind: "sin conexión", severity: "revisión", ids: [p.id], msg: `${p.fsId} ${p.name} no tiene ruta demostrable hasta la persona central; se muestra aparte.` });
     else if (gs.length > 1) issues.push({ kind: "varias generaciones", severity: "info", ids: [p.id], msg: `${p.fsId} ${p.name} enlaza con la persona central por rutas de distinta longitud: G${gs.join(", G")}.` });
     const yb = year(p.birth), yd = year(p.death);
     if (yb && yd && yd < yb) issues.push({ kind: "cronología", severity: "revisión", ids: [p.id], msg: `${p.fsId} ${p.name}: defunción (${yd}) anterior al nacimiento (${yb}).` });
@@ -146,7 +126,7 @@ export function derive(ds: Dataset): Derived {
     if (yc && yp && (yc - yp < 12 || yc - yp > 75))
       issues.push({ kind: "cronología", severity: "revisión", ids: [p.id, c.id], msg: `${p.fsId} ${p.name} (n. ${yp}) y su hijo/a ${c.fsId} ${c.name} (n. ${yc}): diferencia de ${yc - yp} años.` });
   }
-  return { byId, parents, children, unions, unionOf, generation, connected, branches, issues };
+  return { byId, parents, children, unions, unionOf, generation, branches, issues };
 }
 
 export function ancestorsOf(d: Derived, id: string): Set<string> {

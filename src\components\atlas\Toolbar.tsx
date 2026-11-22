@@ -26,7 +26,7 @@ export function Toolbar(props: {
   const [open, setOpen] = useState<null | "stats" | "integrity">(null);
   const [pending, setPending] = useState<PendingImport | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const index = useMemo(() => ds.persons.map((p) => ({ p, k: norm(`${p.name} ${p.altNames.join(" ")} ${p.fsId} ${p.id}`) })), [ds]);
+  const index = useMemo(() => ds.persons.filter((p) => layout.byPerson.has(p.id)).map((p) => ({ p, k: norm(`${p.name} ${p.altNames.join(" ")} ${p.fsId}`) })), [ds, layout]);
   const results = useMemo(() => {
     const t = norm(q.trim()); if (!t) return [];
     const gm = t.match(/^g(\d+)$/);
@@ -55,7 +55,7 @@ export function Toolbar(props: {
       <header className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-wrap items-start gap-2 p-3">
         <div className="pointer-events-auto mr-2 hidden rounded-md border border-border bg-card/90 px-3 py-1.5 backdrop-blur lg:block">
           <div className="font-serif text-lg font-semibold leading-none text-gold">{APP_CONFIG.appName}</div>
-          <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Atlas familiar independiente</div>
+          <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Plantilla reutilizable</div>
         </div>
         <div className="pointer-events-auto relative w-full max-w-sm flex-1 sm:w-80 sm:flex-none">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -65,21 +65,21 @@ export function Toolbar(props: {
               {results.map((p) => (
                 <button key={p.id} className="block w-full px-3 py-2 text-left hover:bg-accent" onClick={() => { props.goTo(p.id); setQ(""); }}>
                   <div className="font-serif text-[15px] font-semibold">{p.name}</div>
-                  <div className="text-xs text-muted-foreground">{life(p) || "Sin fechas"} · <span className="font-mono">{p.fsId}</span> · {d.generation.get(p.id) ? `G${d.generation.get(p.id)!.join("/")}` : d.connected.has(p.id) ? "conexión lateral" : "sin conexión"}</div>
+                  <div className="text-xs text-muted-foreground">{life(p) || "Sin fechas"} · <span className="font-mono">{p.fsId}</span> · {d.generation.get(p.id) ? `G${d.generation.get(p.id)!.join("/")}` : "sin conexión"}</div>
                 </button>
               ))}
             </div>
           )}
         </div>
         <div className="pointer-events-auto flex flex-wrap gap-1.5">
-          <Button size="sm" variant="secondary" onClick={props.goRoot} title={`Volver a ${d.byId.get(ds.meta.root)?.name ?? "la persona central"}`} aria-label="Persona central"><Home className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Persona central</span></Button>
-          <Button size="sm" variant="secondary" onClick={props.fitAll} title="Encuadrar todo" aria-label="Encuadrar todo"><Maximize className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Todo</span></Button>
+          <Button size="sm" variant="secondary" onClick={props.goRoot} title={`Volver a ${d.byId.get(ds.meta.root)?.name ?? "la persona central"}`}><Home className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Persona central</span></Button>
+          <Button size="sm" variant="secondary" onClick={props.fitAll} title="Encuadrar todo"><Maximize className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Todo</span></Button>
           <Select onValueChange={(v) => props.goGen(Number(v))}>
-            <SelectTrigger className="h-8 w-[92px] bg-secondary text-xs" aria-label="Seleccionar generación"><SelectValue placeholder="Gen." /></SelectTrigger>
+            <SelectTrigger className="h-8 w-[92px] bg-secondary text-xs"><SelectValue placeholder="Gen." /></SelectTrigger>
             <SelectContent>{layout.columns.map((c) => <SelectItem key={c.gen} value={String(c.gen)}>G{c.gen} · {c.count}</SelectItem>)}</SelectContent>
           </Select>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button size="sm" variant="secondary" aria-label="Ramas"><Layers className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Ramas</span></Button></DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild><Button size="sm" variant="secondary"><Layers className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Ramas</span></Button></DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuLabel>Mostrar ramas</DropdownMenuLabel>
               {props.branchList.map((b) => (
@@ -88,10 +88,10 @@ export function Toolbar(props: {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button size="sm" variant="secondary" onClick={() => setOpen("stats")} aria-label="Estadísticas"><BarChart3 className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Estadísticas</span></Button>
-          <Button size="sm" variant="secondary" onClick={() => setOpen("integrity")} aria-label="Integridad"><ShieldCheck className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Integridad</span></Button>
+          <Button size="sm" variant="secondary" onClick={() => setOpen("stats")}><BarChart3 className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Estadísticas</span></Button>
+          <Button size="sm" variant="secondary" onClick={() => setOpen("integrity")}><ShieldCheck className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Integridad</span></Button>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button size="sm" variant="secondary" aria-label="Datos"><Database className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Datos</span></Button></DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild><Button size="sm" variant="secondary"><Database className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Datos</span></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={() => fileRef.current?.click()}>Importar JSON / CSV / Excel…</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => fileRef.current?.click()}>Restaurar copia de seguridad JSON…</DropdownMenuItem>
@@ -112,7 +112,7 @@ export function Toolbar(props: {
         </div>
       </header>
       <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[min(24rem,calc(100vw-1.5rem))] rounded-md border border-border bg-card/90 px-3 py-2 text-[11px] leading-snug text-muted-foreground shadow backdrop-blur" role="note">
-        Guardado solo en este navegador. iPhone y Windows no se sincronizan; conserva copias JSON. Las ramas desconectadas están ocultas al abrir: usa «Ramas» → «Sin conexión» para mostrarlas. Borrar datos del navegador puede borrar el árbol.
+        Guardado solo en este navegador. iPhone y Windows no se sincronizan; conserva copias JSON. Borrar datos del navegador puede borrar el árbol.
       </div>
       {props.mode.kind !== "none" && (
         <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-gold/50 bg-card/95 px-4 py-1.5 text-sm text-gold shadow-lg max-md:bottom-auto max-md:top-28">

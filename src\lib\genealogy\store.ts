@@ -10,21 +10,9 @@ const KEY = "dataset";
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
-    let settled = false;
-    const finish = (callback: () => void) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      callback();
-    };
-    const timeout = window.setTimeout(() => finish(() => reject(new Error("IndexedDB tardó demasiado en responder. Cierra otras pestañas de esta aplicación y vuelve a intentarlo."))), 15000);
     request.onupgradeneeded = () => request.result.createObjectStore(STORE);
-    request.onsuccess = () => {
-      if (settled) { request.result.close(); return; }
-      finish(() => resolve(request.result));
-    };
-    request.onerror = () => finish(() => reject(request.error ?? new Error("No se pudo abrir IndexedDB.")));
-    request.onblocked = () => finish(() => reject(new Error("IndexedDB está bloqueada por otra pestaña abierta de esta aplicación. Cierra esa pestaña y recarga.")));
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
   });
 }
 

@@ -24,7 +24,6 @@ export interface Derived {
   unions: Union[];
   unionOf: Map<string, Union[]>;
   generation: Map<string, number[]>;
-  connected: Set<string>;
   branches: Map<string, string[]>;
   issues: Issue[];
 }

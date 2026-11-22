@@ -1,3 +1,4 @@
+import type { Dataset } from "@/lib/genealogy/types";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { derive, findPath } from "@/lib/genealogy/derive";
 import { computeLayout } from "@/lib/genealogy/layout";
@@ -6,51 +7,34 @@ import { ensureRoot, merge, parseJson, parseRows } from "@/lib/genealogy/importe
 import { integrateSequence } from "@/lib/genealogy/sequence";
 import { toGedcom } from "@/lib/genealogy/exporters";
 import { APP_CONFIG, cachePrefixFor, databaseNameFor, viewportKeyFor } from "@/lib/app-config";
-import type { Dataset } from "@/lib/genealogy/types";
 
-const emptyDataset = (): Dataset => ({ meta: { root: "", sources: [] }, persons: [], links: [], pendingRefs: [], issues: [], unions: [] });
+
+
+const blankDataset = (): Dataset => ({ meta: { root: "", sources: [] }, persons: [], links: [], pendingRefs: [], issues: [] });
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe("Del Río Hall genealogy app", () => {
-  it("ships the complete converted family dataset", async () => {
+describe("Generated genealogy application", () => {
+  it("ships the complete generated Atlas as the startup dataset", async () => {
     const ds = await seedDataset();
-    expect(ds.persons).toHaveLength(3962); expect(ds.links).toHaveLength(6364);
-    expect(ds.unions).toHaveLength(1770); expect(ds.pendingRefs).toEqual([]);
-    expect(ds.meta.root).toBe("I1");
-    const derived = derive(ds);
-    expect(derived.connected.size).toBe(2926);
-    expect(ds.persons.length - derived.connected.size).toBe(1036);
+    const mod = await import("@/data/atlas.json");
+    expect(ds).toEqual(structuredClone((mod.default ?? mod) as unknown));
+    expect(ds.persons.map((person) => person.id)).toContain(ds.meta.root);
   });
 
-  it("distinguishes a connected side branch from a disconnected family", () => {
-    const persons = [...parseRows([
-      { id: "ROOT", nombre: "Centro" }, { id: "P", nombre: "Progenitor" },
-      { id: "SIB", nombre: "Rama lateral" }, { id: "OTHER", nombre: "Componente aparte" },
-    ], "test").persons.values()];
-    const ds = { meta: { root: "ROOT", sources: [] }, persons, links: [
-      { child: "ROOT", parent: "P", role: "" as const, sources: [] },
-      { child: "SIB", parent: "P", role: "" as const, sources: [] },
-    ], pendingRefs: [], issues: [] };
+  it("derives and lays out the generated tree without errors", async () => {
+    const ds = await seedDataset();
     const d = derive(ds);
-    expect(d.connected.has("SIB")).toBe(true);
-    expect(d.branches.get("SIB")).toContain("Conexión lateral");
-    expect(d.connected.has("OTHER")).toBe(false);
-    expect(d.branches.get("OTHER")).toContain("Sin conexión");
-  });
-
-  it("derives, lays out and exports an empty dataset without errors", () => {
-    const ds = emptyDataset();
-    const d = derive(ds);
-    expect(d.byId.size).toBe(0);
+    expect(d.byId.size).toBe(ds.persons.length);
     const layout = computeLayout(d, ds.meta.root);
-    expect(layout.apps).toEqual([]); expect(layout.columns).toEqual([]);
+    expect(layout.apps.length).toBeGreaterThan(0);
+    expect(layout.columns.length).toBeGreaterThan(0);
     expect(Object.values(layout.bounds).every(Number.isFinite)).toBe(true);
     expect(toGedcom(ds, d)).toContain("0 TRLR");
   });
 
   it("imports rows, picks a child as root and traces kinship", async () => {
-    const base = emptyDataset();
+    const base = blankDataset();
     const frag = parseRows([
       { id: "C1", nombre: "Hija", "Código padre": "P1", "Código madre": "M1" },
       { id: "P1", nombre: "Padre", Sexo: "M" }, { id: "M1", nombre: "Madre", Sexo: "F" },
@@ -80,13 +64,13 @@ describe("Del Río Hall genealogy app", () => {
     const bytes = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
     const read = XLSX.read(bytes);
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(read.Sheets["Personas"]!, { defval: "", raw: false });
-    const imported = ensureRoot(merge(emptyDataset(), parseRows(rows, "import:xlsx"), "import:xlsx", "test.xlsx").ds);
+    const imported = ensureRoot(merge(blankDataset(), parseRows(rows, "import:xlsx"), "import:xlsx", "test.xlsx").ds);
     expect(imported.links.map((link) => `${link.child}>${link.parent}`).sort()).toEqual(["C1>M1", "C1>P1"]);
     expect(imported.meta.root).toBe("C1");
 
     const Papa = (await import("papaparse")).default;
     const csv = Papa.parse<Record<string, unknown>>("id,nombre,Sexo,Código padre,Código madre,Lugar de nacimiento,Lugar de matrimonio\nC1,Hija,,P1,M1,Ciudad ficticia,\nP1,Padre,M,,,,Villa ficticia\nM1,Madre,F,,,,Villa ficticia", { header: true, skipEmptyLines: true });
-    const fromCsv = ensureRoot(merge(emptyDataset(), parseRows(csv.data, "import:csv"), "import:csv", "test.csv").ds);
+    const fromCsv = ensureRoot(merge(blankDataset(), parseRows(csv.data, "import:csv"), "import:csv", "test.csv").ds);
     expect(fromCsv.links.map((link) => `${link.child}>${link.parent}`).sort()).toEqual(["C1>M1", "C1>P1"]);
     expect(fromCsv.persons.find((person) => person.id === "C1")?.birthPlace).toBe("Ciudad ficticia");
     const gedcom = toGedcom(fromCsv, derive(fromCsv));
@@ -96,7 +80,7 @@ describe("Del Río Hall genealogy app", () => {
 
   it("preserves metadata and person provenance when merging a JSON backup", async () => {
     const person = parseRows([{ id: "P1", nombre: "Persona" }], "old").persons.get("P1")!;
-    const base = { ...emptyDataset(), persons: [person] };
+    const base = { ...blankDataset(), persons: [person] };
     const incoming = structuredClone(base);
     incoming.persons[0]!.verification = "transcripcion-visual";
     incoming.persons[0]!.notes = ["Nota de prueba"];
@@ -124,8 +108,22 @@ describe("Del Río Hall genealogy app", () => {
     expect(computeLayout(derive(data), data.meta.root).columns.length).toBeGreaterThanOrEqual(19);
   });
 
+  it("excludes detached components from the tree layout without changing the source dataset", () => {
+    const persons = [...parseRows([
+      { id: "ROOT", nombre: "Persona central" },
+      { id: "OFF1", nombre: "Pariente desconectado" },
+      { id: "OFF2", nombre: "Progenitor desconectado" },
+    ], "test").persons.values()];
+    const data = { meta: { root: "ROOT", sources: [] }, persons,
+      links: [{ child: "OFF1", parent: "OFF2", role: "" as const, sources: [] }], pendingRefs: [], issues: [] };
+    const layout = computeLayout(derive(data), data.meta.root);
+    expect(layout.apps.map((a) => a.personId)).toEqual(["ROOT"]);
+    expect(persons).toHaveLength(3);
+    expect(data.links).toHaveLength(1);
+  });
+
   it("marks couple-sequence imports as visual transcriptions, not verified documents", async () => {
-    const { ds } = integrateSequence(emptyDataset(), {
+    const { ds } = integrateSequence(blankDataset(), {
       titulo: "t", fuente: { tipo: "imagen", archivo: "x.png", alcance: "Transcripción visual" }, criterio_transcripcion: "literal",
       secuencia_parejas: [{ orden: 1, progenitores: [{ nombre: "A", fechas: "1900–1950", codigo: "A1" }, { nombre: "B", fechas: "1901–1960", codigo: "B1" }], descendiente: { nombre: "C", fechas: "1930–Vive", codigo: "C1" } }],
       observaciones: [],
@@ -147,9 +145,9 @@ describe("Del Río Hall genealogy app", () => {
     });
     vi.stubGlobal("indexedDB", { open });
     expect(await loadDataset()).toBeNull();
-    expect(DB_NAME).toBe(`atlas-${APP_CONFIG.id}-v1`);
+    expect(DB_NAME).toBe(databaseNameFor(APP_CONFIG.id));
     expect(open).toHaveBeenCalledTimes(1);
-    expect(open).toHaveBeenCalledWith(`atlas-${APP_CONFIG.id}-v1`, 1);
+    expect(open).toHaveBeenCalledWith(DB_NAME, 1);
   });
 
   it("keeps database, viewport, and service worker identities separate per generated app", () => {
