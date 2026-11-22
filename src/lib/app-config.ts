@@ -11,5 +11,6 @@ export interface AppConfig {
 
 export const APP_CONFIG = config as AppConfig;
 export const databaseNameFor = (appId: string) => `atlas-${appId}-v1`;
-export const viewportKeyFor = (appId: string) => `atlas-${appId}-viewport-v1`;
+// Reset only stale view state when canvas framing changes; family data is untouched.
+export const viewportKeyFor = (appId: string) => `atlas-${appId}-viewport-v3`;
 export const cachePrefixFor = (appId: string) => `atlas-cache-${appId}-`;
