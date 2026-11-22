@@ -54,6 +54,24 @@ describe("Generated genealogy application", () => {
     expect(seen.size).toBe(ds.persons.length);
   });
 
+  it("stacks the three siblings in one child column sharing the same visible parents", async () => {
+    const ds = await seedDataset();
+    const layout = computeLayout(derive(ds), ds.meta.root);
+    const cards = ["I3963", "I1", "I3964"].map((id) => layout.byPerson.get(id)?.[0]);
+    expect(cards.every(Boolean)).toBe(true);
+    expect(cards.map((card) => card!.personId)).toEqual(["I3963", "I1", "I3964"]);
+    expect(cards.map((card) => card!.depth)).toEqual([0, 0, 0]);
+    expect(cards.map((card) => card!.gen)).toEqual([1, 1, 1]);
+    expect(new Set(cards.map((card) => card!.x)).size).toBe(1);
+    expect(new Set(cards.map((card) => card!.y)).size).toBe(3);
+    expect(cards[0]!.y).toBeLessThan(cards[1]!.y);
+    expect(cards[1]!.y).toBeLessThan(cards[2]!.y);
+    expect(cards[0]!.parentKeys).toEqual(cards[1]!.parentKeys);
+    expect(cards[2]!.parentKeys).toEqual(cards[1]!.parentKeys);
+    const family = layout.unions.find((union) => cards.every((card) => union.childKeys.includes(card!.key)));
+    expect(family?.parentKeys).toEqual(cards[1]!.parentKeys);
+  });
+
   it("contains both transcribed branches with all source endpoints and evidence", async () => {
     const ds = await seedDataset();
     const fsIds = new Set(ds.persons.map((person) => person.fsId));

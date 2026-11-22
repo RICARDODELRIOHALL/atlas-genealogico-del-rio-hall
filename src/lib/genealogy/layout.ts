@@ -10,7 +10,7 @@ export interface Appearance {
 }
 export interface LayoutResult {
   apps: Appearance[]; byPerson: Map<string, Appearance[]>;
-  unions: { key: string; x: number; y: number; childKey: string; parentKeys: string[] }[];
+  unions: { key: string; x: number; y: number; childKeys: string[]; parentKeys: string[] }[];
   columns: { gen: number; x: number; minY: number; maxY: number; count: number }[];
   pendingTop: number | null; bounds: { minX: number; minY: number; maxX: number; maxY: number };
 }
@@ -84,13 +84,45 @@ export function computeLayout(d: Derived, root: string): LayoutResult {
   };
   for (const r of roots) placeRoot(r, true);
 
+  // Show the central person's full siblings beside them in the same generation.
+  // Their parent appearances are shared, so all sibling cards visibly connect to
+  // the exact same parental junction without duplicating either parent card.
+  const rootApp = roots[0];
+  if (rootApp?.parentKeys.length) {
+    const rootParents = [...new Set(orderedParents(d, rootApp.personId))].sort();
+    const siblingIds = new Set<string>();
+    for (const parentId of rootParents) for (const childId of d.children.get(parentId) ?? []) {
+      if (childId === rootApp.personId) continue;
+      const candidateParents = [...new Set(orderedParents(d, childId))].sort();
+      if (candidateParents.length === rootParents.length && candidateParents.every((id, i) => id === rootParents[i])) siblingIds.add(childId);
+    }
+    const birthYear = (id: string) => { const match = d.byId.get(id)?.birth?.match(/(1[0-9]{3}|20[0-2][0-9])/); return match ? Number(match[1]) : Infinity; };
+    const siblings = [...siblingIds].concat(rootApp.personId).map((id) => d.byId.get(id)!)
+      .sort((a, b) => birthYear(a.id) - birthYear(b.id) || a.name.localeCompare(b.name));
+    const rootIndex = siblings.findIndex((person) => person.id === rootApp.personId);
+    siblings.forEach((person, index) => {
+      if (person.id === rootApp.personId) return;
+      const sibling = mk(person.id, 0, null, "main");
+      sibling.x = rootApp.x;
+      sibling.y = rootApp.y + (index - rootIndex) * (CARD_H + GAP);
+      sibling.parentKeys = [...rootApp.parentKeys];
+    });
+  }
+
   const list = [...apps.values()];
   const unions: LayoutResult["unions"] = [];
-  for (const a of list) {
-    if (!a.parentKeys.length) continue;
-    const ps = a.parentKeys.map((k) => apps.get(k)!);
+  const familyGroups = new Map<string, Appearance[]>();
+  for (const a of list) if (a.parentKeys.length) {
+    const parentKeys = [...a.parentKeys].sort();
+    const signature = parentKeys.join("|");
+    (familyGroups.get(signature) ?? familyGroups.set(signature, []).get(signature)!).push(a);
+  }
+  for (const children of familyGroups.values()) {
+    const parentKeys = children[0].parentKeys;
+    const ps = parentKeys.map((k) => apps.get(k)!);
     const ys = ps.map((p) => p.y);
-    unions.push({ key: `j${a.key}`, x: (a.depth + 1) * COL_W - 34, y: (Math.min(...ys) + Math.max(...ys)) / 2, childKey: a.key, parentKeys: a.parentKeys });
+    unions.push({ key: `j${parentKeys.slice().sort().join("+")}`, x: (children[0].depth + 1) * COL_W - 34,
+      y: (Math.min(...ys) + Math.max(...ys)) / 2, childKeys: children.map((a) => a.key), parentKeys });
   }
   const cols = new Map<number, LayoutResult["columns"][number]>();
   for (const a of list) {
@@ -104,3 +136,4 @@ export function computeLayout(d: Derived, root: string): LayoutResult {
     bounds: { minX: Math.min(...xs), minY: Math.min(...ys) - CARD_H, maxX: Math.max(...xs) + CARD_W, maxY: Math.max(...ys) + CARD_H },
   };
 }
+

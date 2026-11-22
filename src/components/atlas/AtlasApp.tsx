@@ -58,13 +58,13 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
     const m = new Map<string, string>(); const byKey = new Map(layout.apps.map((a) => [a.key, a]));
     for (const a of layout.apps) {
       if (a.group === "pending") { m.set(a.key, "Sin conexión"); continue; }
-      if (a.depth === 0) { m.set(a.key, "Central"); continue; }
+      if (a.depth === 0) { m.set(a.key, a.personId === ds.meta.root ? "Central" : "Hermanos"); continue; }
       if (a.depth === 1) { m.set(a.key, "Padres"); continue; }
       let x = a; while (x.depth > 2) x = byKey.get(x.childKey!)!;
       m.set(a.key, d.branches.get(x.personId)?.[0] ?? "Sin conexión");
     }
     return m;
-  }, [layout, d]);
+  }, [layout, d, ds.meta.root]);
   const branchList = useMemo(() => [...new Set(appBranch.values())].filter((b) => b !== "Central" && b !== "Padres"), [appBranch]);
   const BRANCH_COLORS = useMemo(() => {
     const m: Record<string, string> = { Central: "var(--gold)", Padres: "var(--gold)" };
@@ -93,7 +93,7 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
   const baseEdges = useMemo<Edge[]>(() => {
     const e: Edge[] = [];
     for (const u of layout.unions) {
-      e.push({ id: `e${u.key}`, source: u.childKey, target: u.key, type: "smoothstep", selectable: false, focusable: false });
+      for (const childKey of u.childKeys) e.push({ id: `e${u.key}-${childKey}`, source: childKey, target: u.key, type: "smoothstep", selectable: false, focusable: false });
       for (const p of u.parentKeys) e.push({ id: `e${u.key}-${p}`, source: u.key, target: p, type: "step", selectable: false, focusable: false });
     }
     return e;
@@ -103,7 +103,7 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
   const nodes = useMemo(() => baseNodes.map((n) => {
     if (n.type !== "person") {
       if (n.type === "blabel") return { ...n, hidden: hidden.has(n.data.label) };
-      if (n.type === "union") { const u = unionByKey.get(n.id); return u && hidden.has(appBranch.get(u.childKey)!) && u.parentKeys.every((k) => hidden.has(appBranch.get(k)!)) ? { ...n, hidden: true } : n; }
+      if (n.type === "union") { const u = unionByKey.get(n.id); return u && u.childKeys.every((childKey) => hidden.has(appBranch.get(childKey)!)) && u.parentKeys.every((k) => hidden.has(appBranch.get(k)!)) ? { ...n, hidden: true } : n; }
       return n;
     }
     const pid = appPerson.get(n.id)!;
@@ -115,7 +115,7 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
     if (!hl.size) return baseEdges;
     return baseEdges.map((e) => {
       const s = appPerson.get(e.source) ?? null, t = appPerson.get(e.target) ?? null;
-      const ok = (x: string | null, key: string) => (x ? hl.has(x) : (() => { const u = unionByKey.get(key); return !!u && hl.has(appPerson.get(u.childKey)!) && u.parentKeys.some((k) => hl.has(appPerson.get(k)!)); })());
+      const ok = (x: string | null, key: string) => (x ? hl.has(x) : (() => { const u = unionByKey.get(key); return !!u && u.childKeys.some((childKey) => hl.has(appPerson.get(childKey)!)) && u.parentKeys.some((k) => hl.has(appPerson.get(k)!)); })());
       return ok(s, e.source) && ok(t, e.target) ? { ...e, className: "hl" } : e;
     });
   }, [baseEdges, hl, appPerson, unionByKey]);
