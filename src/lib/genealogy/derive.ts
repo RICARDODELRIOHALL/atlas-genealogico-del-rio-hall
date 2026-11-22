@@ -2,7 +2,7 @@
 import type { Dataset, Derived, Issue, ParentLink, Person, Union } from "./types";
 
 /** Etiquetas de rama por abuelo/a de la persona central (solo etiquetas; la estructura sale de los datos). */
-export const BRANCH_LABELS: Record<string, string> = {};
+export const BRANCH_LABELS: Record<string, string> = { I7: "del Rio", I4: "Hall" };
 export const DERIVED_KINDS = new Set(["varias generaciones", "sin conexión", "cronología", "ciclo", "más de dos progenitores", "rol/sexo"]);
 
 export function year(s?: string): number | null {
@@ -160,3 +160,4 @@ export function describeStep(d: Derived, a: string, b: string): string {
   if (up) return up.role || (d.byId.get(b)!.sex === "M" ? "padre" : d.byId.get(b)!.sex === "F" ? "madre" : "progenitor/a");
   return d.byId.get(b)!.sex === "M" ? "hijo" : d.byId.get(b)!.sex === "F" ? "hija" : "hijo/a";
 }
+
