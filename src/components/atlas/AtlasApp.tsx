@@ -95,25 +95,27 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
   }, [layout]);
   const appPerson = useMemo(() => new Map(layout.apps.map((a) => [a.key, a.personId])), [layout]);
   const unionByKey = useMemo(() => new Map(layout.unions.map((u) => [u.key, u])), [layout]);
-  const nodes = useMemo(() => baseNodes.map((n) => {
+  const nodes = useMemo(() => baseNodes.flatMap((n) => {
     if (n.type !== "person") {
-      if (n.type === "blabel") return { ...n, hidden: hidden.has(n.data.label) };
-      if (n.type === "union") { const u = unionByKey.get(n.id); return u && hidden.has(appBranch.get(u.childKey)!) && u.parentKeys.every((k) => hidden.has(appBranch.get(k)!)) ? { ...n, hidden: true } : n; }
-      return n;
+      if (n.type === "blabel") return hidden.has(n.data.label) ? [] : [n];
+      if (n.type === "union") { const u = unionByKey.get(n.id); return u && (hidden.has(appBranch.get(u.childKey)!) || u.parentKeys.some((k) => hidden.has(appBranch.get(k)!))) ? [] : [n]; }
+      return [n];
     }
+    if (hidden.has(appBranch.get(n.id)!)) return [];
     const pid = appPerson.get(n.id)!;
     const cls = [hl.has(pid) ? "hl" : "", selApp === n.id || (selected === pid && !selApp) ? "sel" : selected === pid ? "hl" : ""].join(" ").trim();
-    const hide = hidden.has(appBranch.get(n.id)!);
-    return cls || hide ? { ...n, className: cls, hidden: hide } : n;
+    return [cls ? { ...n, className: cls } : n];
   }), [baseNodes, hl, selected, selApp, hidden, appBranch, appPerson, unionByKey]);
+  const visibleNodeIds = useMemo(() => new Set(nodes.map((n) => n.id)), [nodes]);
   const edges = useMemo(() => {
-    if (!hl.size) return baseEdges;
-    return baseEdges.map((e) => {
+    const visibleEdges = baseEdges.filter((e) => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target));
+    if (!hl.size) return visibleEdges;
+    return visibleEdges.map((e) => {
       const s = appPerson.get(e.source) ?? null, t = appPerson.get(e.target) ?? null;
       const ok = (x: string | null, key: string) => (x ? hl.has(x) : (() => { const u = unionByKey.get(key); return !!u && hl.has(appPerson.get(u.childKey)!) && u.parentKeys.some((k) => hl.has(appPerson.get(k)!)); })());
       return ok(s, e.source) && ok(t, e.target) ? { ...e, className: "hl" } : e;
     });
-  }, [baseEdges, hl, appPerson, unionByKey]);
+  }, [baseEdges, visibleNodeIds, hl, appPerson, unionByKey]);
 
   const goTo = useCallback((pid: string, appKey?: string) => {
     const apps = layout.byPerson.get(pid); if (!apps?.length) return;
@@ -138,8 +140,18 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
 
   const initialVp = useRef<Viewport | null>((() => { try { return JSON.parse(sessionStorage.getItem(VP_KEY) ?? "null"); } catch { return null; } })());
   const onInit = useCallback(() => {
-    if (initialVp.current) rf.setViewport(initialVp.current);
-    else { const r = layout.byPerson.get(ds.meta.root)?.[0]; if (r) rf.setCenter(r.x + 600, r.y, { zoom: 0.75 }); }
+    const roots = layout.byPerson.get(ds.meta.root);
+    const root = roots?.find((a) => !a.isRef) ?? roots?.[0];
+    const centerRoot = () => { if (root) rf.setCenter(root.x + CARD_W / 2, root.y, { zoom: 0.75 }); };
+    if (!initialVp.current) { centerRoot(); return; }
+    void rf.setViewport(initialVp.current).then(() => {
+      // A saved view can point at a disconnected branch, which is hidden again
+      // on startup. Recover to the central person only when the viewport would
+      // otherwise show no person cards at all.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (!document.querySelector(".react-flow__node-person")) centerRoot();
+      }));
+    });
   }, [rf, layout, ds.meta.root]);
   const onMove = useCallback((_: unknown, vp: Viewport) => {
     const lvl = vp.zoom < 0.22 ? "far" : vp.zoom < 0.6 ? "mid" : "near";
@@ -164,7 +176,7 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
   };
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-canvas" data-zoom={zoomLvl}>
+    <div className="relative h-dvh w-full overflow-hidden bg-canvas" data-testid="atlas-canvas" data-zoom={zoomLvl}>
       <ReactFlow
         className={`atlas-flow${hl.size ? " dimmed" : ""}`}
         nodes={nodes} edges={edges} nodeTypes={nodeTypes}
