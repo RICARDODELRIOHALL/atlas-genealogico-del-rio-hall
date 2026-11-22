@@ -4,6 +4,7 @@ import type { Dataset, Issue, ParentLink, Person } from "./types";
 const empty = (id: string): Person => ({ id, fsId: id, name: "", altNames: [], sex: "", birth: "", death: "", marriage: "", baptism: "", burial: "", birthPlace: "", deathPlace: "", marriagePlace: "", notes: [], sources: [], originals: [] });
 type Frag = { persons: Map<string, Person>; links: ParentLink[]; issues: Issue[]; unions?: Dataset["unions"] };
 const str = (v: unknown) => (v == null ? "" : String(v).trim());
+const recordedYear = (v: unknown) => str(v).match(/\b(?:1[0-9]{3}|20[0-2][0-9])\b/)?.[0] ?? "";
 
 function fragFromRows(rows: Record<string, unknown>[], src: string): Frag {
   const f: Frag = { persons: new Map(), links: [], issues: [], unions: [] };
@@ -69,7 +70,11 @@ export function merge(base: Dataset, inc: Frag | Dataset, src: string, file: str
       const v = ip[k]; if (!v) continue;
       if (!ex[k]) { (ex as any)[k] = v; touched = true; }
       else if (ex[k] !== v) {
-        if (k === "name" && !ex.altNames.includes(v)) ex.altNames.push(v);
+        if (k === "name") {
+          if (!ex.altNames.includes(v)) { ex.altNames.push(v); touched = true; }
+          continue;
+        }
+        if ((k === "birth" || k === "death") && recordedYear(ex[k]) && recordedYear(ex[k]) === recordedYear(v)) continue;
         report.conflicts++;
         report.issues.push({ kind: "discrepancia", severity: "revisión", ids: [ex.id], msg: `${ex.id}: «${k}» difiere al importar ${file} (${ex[k]} vs ${v}). Se conserva el valor existente.` });
       }
@@ -93,8 +98,20 @@ export function merge(base: Dataset, inc: Frag | Dataset, src: string, file: str
     const k = unionKey(u); const existing = unions.get(k);
     if (existing) {
       if (!existing.marriage && u.marriage) existing.marriage = u.marriage;
+      else if (existing.marriage && u.marriage && existing.marriage !== u.marriage && recordedYear(existing.marriage) !== recordedYear(u.marriage)) {
+        report.conflicts++;
+        report.issues.push({ kind: "fecha matrimonial discrepante", severity: "revisión", ids: [existing.a, existing.b], msg: `La fecha de unión difiere al importar ${file} (${existing.marriage} vs ${u.marriage}); se conservan ambas.` });
+        existing.marriageVariants = [...new Set([...(existing.marriageVariants ?? []), existing.marriage, u.marriage, ...(u.marriageVariants ?? [])])];
+      }
       if (!existing.marriagePlace && u.marriagePlace) existing.marriagePlace = u.marriagePlace;
+      else if (existing.marriagePlace && u.marriagePlace && existing.marriagePlace !== u.marriagePlace) existing.marriagePlaceVariants = [...new Set([...(existing.marriagePlaceVariants ?? []), existing.marriagePlace, u.marriagePlace, ...(u.marriagePlaceVariants ?? [])])];
       existing.sources = [...new Set([...(existing.sources ?? []), ...(u.sources ?? [])])];
+      const originalRecords = new Set((existing.originalRecords ?? []).map((o) => JSON.stringify(o)));
+      for (const original of u.originalRecords ?? []) if (!originalRecords.has(JSON.stringify(original))) {
+        existing.originalRecords ??= [];
+        existing.originalRecords.push(structuredClone(original));
+        originalRecords.add(JSON.stringify(original));
+      }
     } else { const copy = structuredClone(u); ds.unions ??= []; ds.unions.push(copy); unions.set(k, copy); }
   }
   const lk = new Map(ds.links.map((l) => [`${l.child}>${l.parent}`, l]));
@@ -139,3 +156,4 @@ export function ensureRoot(ds: Dataset, preferred?: string): Dataset {
   }
   return { ...ds, meta: { ...ds.meta, root } };
 }
+

@@ -1,6 +1,6 @@
 const APP_ID = "familia-del-rio-hall";
 const CACHE_PREFIX = `atlas-cache-${APP_ID}-`;
-const CACHE = `${CACHE_PREFIX}v1`;
+const CACHE = `${CACHE_PREFIX}v2`;
 const base = new URL("./", self.location.href);
 const shell = [".", "manifest.webmanifest", "icons/family-icon.svg", "icons/family-icon-180.png", "icons/family-icon-512.png"];
 
@@ -26,3 +26,4 @@ self.addEventListener("fetch", (event) => {
     return response;
   }).catch(() => caches.match(new URL(".", base)))));
 });
+

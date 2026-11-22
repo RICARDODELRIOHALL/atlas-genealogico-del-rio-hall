@@ -20,6 +20,24 @@ describe("Generated genealogy application", () => {
     const mod = await import("@/data/atlas.json");
     expect(ds).toEqual(structuredClone((mod.default ?? mod) as unknown));
     expect(ds.persons.map((person) => person.id)).toContain(ds.meta.root);
+    expect(ds.persons).toHaveLength(2952);
+    expect(ds.links).toHaveLength(6396);
+    expect(ds.unions).toHaveLength(737);
+  });
+
+  it("contains both transcribed branches with all source endpoints and evidence", async () => {
+    const ds = await seedDataset();
+    const fsIds = new Set(ds.persons.map((person) => person.fsId));
+    const branchIds = [
+      "L8BX-ZHN", "MF6V-C69", "LBGD-P8S", "LTDJ-X1W", "LD91-3K9", "L8BX-895", "93C9-SDV", "LT5N-7F7", "937J-D9D", "LTKH-4FN", "PN5T-Y34", "LB1S-5V6", "K24L-MWK", "LR4Q-118", "LD91-Q66", "LD91-Q6J", "L7TR-TVZ", "L41W-5SK", "LYWX-CBR", "9CQX-DXX", "9SS7-5BT", "9HD3-MC1", "KPQC-HMQ", "G8KF-LGX", "LHV5-DYD", "LHWW-QBM", "9CQ1-X4J", "LD93-WKS", "LZ1V-JW1", "99VV-GRX",
+    ];
+    expect(branchIds.every((id) => fsIds.has(id))).toBe(true);
+    expect(ds.meta.sources.filter((source) => source.id.startsWith("familysearch-branch:")).map((source) => source.file)).toEqual([
+      "rama_L8BX-ZHN_MF6V-C69_hasta_9SS7-5BT.json",
+      "rama_KPQC-HMQ_G8KF-LGX_hasta_9SS7-5BT.json",
+    ]);
+    expect(ds.links.filter((link) => link.originals?.some((original) => original.source.startsWith("familysearch-branch:"))).length).toBe(32);
+    expect(ds.unions?.filter((union) => union.originalRecords?.some((original) => original.source.startsWith("familysearch-branch:"))).length).toBe(15);
   });
 
   it("derives and lays out the generated tree without errors", async () => {
@@ -168,3 +186,4 @@ describe("Generated genealogy application", () => {
     expect(gedcom).toContain("2 PLAC Madrid");
   });
 });
+

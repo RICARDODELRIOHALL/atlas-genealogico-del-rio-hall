@@ -8,8 +8,8 @@ export interface Person {
   /** Estado documental: FamilySearch nunca equivale a verificación original */
   verification?: "familysearch" | "documento-original" | "transcripcion-visual";
 }
-export interface ParentLink { child: string; parent: string; role: "" | "padre" | "madre"; sources: SourceId[] }
-export interface UnionRecord { a: string; b: string; marriage?: string; marriagePlace?: string; marriageVariants?: string[]; marriagePlaceVariants?: string[]; sources?: SourceId[]; [key: string]: unknown }
+export interface ParentLink { child: string; parent: string; role: "" | "padre" | "madre"; sources: SourceId[]; originals?: OriginalRecord[] }
+export interface UnionRecord { a: string; b: string; marriage?: string; marriagePlace?: string; marriageVariants?: string[]; marriagePlaceVariants?: string[]; sources?: SourceId[]; originalRecords?: OriginalRecord[]; [key: string]: unknown }
 export interface SourceInfo { id: SourceId; file: string; kind: string; note: string }
 export interface Issue { kind: string; msg: string; ids: string[]; severity: "info" | "revisión" | "grave" }
 export interface Dataset {
@@ -27,3 +27,4 @@ export interface Derived {
   branches: Map<string, string[]>;
   issues: Issue[];
 }
+
