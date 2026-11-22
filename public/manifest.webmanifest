@@ -1,0 +1,32 @@
+{
+  "id": "/atlas-genealogico-del-rio-hall/",
+  "name": "Árbol Genealógico Del Río Hall",
+  "short_name": "Del Río Hall",
+  "description": "Árbol genealógico de Del Río Hall.",
+  "start_url": "/atlas-genealogico-del-rio-hall/",
+  "scope": "/atlas-genealogico-del-rio-hall/",
+  "display": "standalone",
+  "background_color": "#11151c",
+  "theme_color": "#11151c",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icons/family-icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/family-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/family-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
