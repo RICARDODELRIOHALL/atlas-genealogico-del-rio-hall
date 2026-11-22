@@ -26,7 +26,7 @@ export function Toolbar(props: {
   const [open, setOpen] = useState<null | "stats" | "integrity">(null);
   const [pending, setPending] = useState<PendingImport | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const index = useMemo(() => ds.persons.map((p) => ({ p, k: norm(`${p.name} ${p.altNames.join(" ")} ${p.fsId}`) })), [ds]);
+  const index = useMemo(() => ds.persons.map((p) => ({ p, k: norm(`${p.name} ${p.altNames.join(" ")} ${p.fsId} ${p.id}`) })), [ds]);
   const results = useMemo(() => {
     const t = norm(q.trim()); if (!t) return [];
     const gm = t.match(/^g(\d+)$/);
@@ -72,14 +72,14 @@ export function Toolbar(props: {
           )}
         </div>
         <div className="pointer-events-auto flex flex-wrap gap-1.5">
-          <Button size="sm" variant="secondary" onClick={props.goRoot} title={`Volver a ${d.byId.get(ds.meta.root)?.name ?? "la persona central"}`}><Home className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Persona central</span></Button>
-          <Button size="sm" variant="secondary" onClick={props.fitAll} title="Encuadrar todo"><Maximize className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Todo</span></Button>
+          <Button size="sm" variant="secondary" onClick={props.goRoot} title={`Volver a ${d.byId.get(ds.meta.root)?.name ?? "la persona central"}`} aria-label="Persona central"><Home className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Persona central</span></Button>
+          <Button size="sm" variant="secondary" onClick={props.fitAll} title="Encuadrar todo" aria-label="Encuadrar todo"><Maximize className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Todo</span></Button>
           <Select onValueChange={(v) => props.goGen(Number(v))}>
-            <SelectTrigger className="h-8 w-[92px] bg-secondary text-xs"><SelectValue placeholder="Gen." /></SelectTrigger>
+            <SelectTrigger className="h-8 w-[92px] bg-secondary text-xs" aria-label="Seleccionar generación"><SelectValue placeholder="Gen." /></SelectTrigger>
             <SelectContent>{layout.columns.map((c) => <SelectItem key={c.gen} value={String(c.gen)}>G{c.gen} · {c.count}</SelectItem>)}</SelectContent>
           </Select>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button size="sm" variant="secondary"><Layers className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Ramas</span></Button></DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild><Button size="sm" variant="secondary" aria-label="Ramas"><Layers className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Ramas</span></Button></DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuLabel>Mostrar ramas</DropdownMenuLabel>
               {props.branchList.map((b) => (
@@ -88,10 +88,10 @@ export function Toolbar(props: {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button size="sm" variant="secondary" onClick={() => setOpen("stats")}><BarChart3 className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Estadísticas</span></Button>
-          <Button size="sm" variant="secondary" onClick={() => setOpen("integrity")}><ShieldCheck className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Integridad</span></Button>
+          <Button size="sm" variant="secondary" onClick={() => setOpen("stats")} aria-label="Estadísticas"><BarChart3 className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Estadísticas</span></Button>
+          <Button size="sm" variant="secondary" onClick={() => setOpen("integrity")} aria-label="Integridad"><ShieldCheck className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Integridad</span></Button>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button size="sm" variant="secondary"><Database className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Datos</span></Button></DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild><Button size="sm" variant="secondary" aria-label="Datos"><Database className="h-4 w-4 sm:mr-1" /><span className="hidden sm:inline">Datos</span></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={() => fileRef.current?.click()}>Importar JSON / CSV / Excel…</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => fileRef.current?.click()}>Restaurar copia de seguridad JSON…</DropdownMenuItem>
