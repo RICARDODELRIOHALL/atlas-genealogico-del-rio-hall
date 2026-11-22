@@ -78,8 +78,10 @@ export function derive(ds: Dataset): Derived {
   const root = ds.meta.root;
   const generation = new Map<string, number[]>();
   const cycleSeen = new Set<string>();
+  const siblingIds = new Set<string>();
   if (byId.has(root)) {
     const gsets = new Map<string, Set<number>>();
+    const rootParentIds = (parents.get(root) ?? []).map((l) => l.parent);
     const stack: [string, number, string[]][] = [[root, 1, [root]]];
     while (stack.length) {
       const [x, g, path] = stack.pop()!;
@@ -95,11 +97,20 @@ export function derive(ds: Dataset): Derived {
         stack.push([l.parent, g + 1, path.length < 64 ? [...path, l.parent] : [l.parent]]);
       }
     }
+    if (rootParentIds.length) {
+      for (const parentId of rootParentIds) for (const childId of children.get(parentId) ?? []) {
+        if (childId === root) continue;
+        const childParents = new Set((parents.get(childId) ?? []).map((l) => l.parent));
+        if (rootParentIds.every((id) => childParents.has(id))) siblingIds.add(childId);
+      }
+      for (const siblingId of siblingIds) (gsets.get(siblingId) ?? gsets.set(siblingId, new Set()).get(siblingId)!).add(1);
+    }
     for (const [k, s] of gsets) generation.set(k, [...s].sort((a, b) => a - b));
   }
   // Ramas por cuadrante de abuelos
   const branches = new Map<string, string[]>();
   const bsets = new Map<string, Set<string>>();
+  for (const siblingId of siblingIds) branches.set(siblingId, ["Hermanos"]);
   for (const pl of parents.get(root) ?? []) for (const gl of parents.get(pl.parent) ?? []) {
     const lab = BRANCH_LABELS[gl.parent] ?? fallbackLabel(byId.get(gl.parent)!.name);
     const st = [gl.parent];
@@ -112,7 +123,7 @@ export function derive(ds: Dataset): Derived {
   for (const p of ds.persons) {
     if (p.id === root) branches.set(p.id, ["Central"]);
     else if ((parents.get(root) ?? []).some((l) => l.parent === p.id)) branches.set(p.id, ["Padres"]);
-    else branches.set(p.id, [...(bsets.get(p.id) ?? [])].sort());
+    else if (!branches.has(p.id)) branches.set(p.id, [...(bsets.get(p.id) ?? [])].sort());
     const gs = generation.get(p.id);
     if (!gs) issues.push({ kind: "sin conexión", severity: "revisión", ids: [p.id], msg: `${p.fsId} ${p.name} no tiene ruta demostrable hasta la persona central; se muestra aparte.` });
     else if (gs.length > 1) issues.push({ kind: "varias generaciones", severity: "info", ids: [p.id], msg: `${p.fsId} ${p.name} enlaza con la persona central por rutas de distinta longitud: G${gs.join(", G")}.` });

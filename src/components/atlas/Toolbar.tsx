@@ -26,7 +26,7 @@ export function Toolbar(props: {
   const [open, setOpen] = useState<null | "stats" | "integrity">(null);
   const [pending, setPending] = useState<PendingImport | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const index = useMemo(() => ds.persons.filter((p) => layout.byPerson.has(p.id)).map((p) => ({ p, k: norm(`${p.name} ${p.altNames.join(" ")} ${p.fsId}`) })), [ds, layout]);
+  const index = useMemo(() => ds.persons.map((p) => ({ p, k: norm(`${p.name} ${p.altNames.join(" ")} ${p.fsId} ${p.id}`) })), [ds]);
   const results = useMemo(() => {
     const t = norm(q.trim()); if (!t) return [];
     const gm = t.match(/^g(\d+)$/);
@@ -65,7 +65,7 @@ export function Toolbar(props: {
               {results.map((p) => (
                 <button key={p.id} className="block w-full px-3 py-2 text-left hover:bg-accent" onClick={() => { props.goTo(p.id); setQ(""); }}>
                   <div className="font-serif text-[15px] font-semibold">{p.name}</div>
-                  <div className="text-xs text-muted-foreground">{life(p) || "Sin fechas"} · <span className="font-mono">{p.fsId}</span> · {d.generation.get(p.id) ? `G${d.generation.get(p.id)!.join("/")}` : "sin conexión"}</div>
+                  <div className="text-xs text-muted-foreground">{life(p) || "Sin fechas"} · <span className="font-mono">{p.fsId || p.id}</span> · {d.generation.get(p.id) ? `G${d.generation.get(p.id)!.join("/")}` : "ficha fuera del encuadre"}</div>
                 </button>
               ))}
             </div>

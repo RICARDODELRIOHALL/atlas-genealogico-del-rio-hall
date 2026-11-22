@@ -121,11 +121,12 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
   }, [baseEdges, hl, appPerson, unionByKey]);
 
   const goTo = useCallback((pid: string, appKey?: string) => {
-    const apps = layout.byPerson.get(pid); if (!apps?.length) return;
+    const apps = layout.byPerson.get(pid);
+    if (!apps?.length) { if (d.byId.has(pid)) { setSelected(pid); setSelApp(null); } return; }
     const a = (appKey && apps.find((x) => x.key === appKey)) || apps.find((x) => !x.isRef) || apps[0];
     setSelected(pid); setSelApp(a.key);
     rf.setCenter(a.x + CARD_W / 2, a.y, { zoom: Math.max(rf.getZoom(), 0.9), duration: 900 });
-  }, [layout, rf]);
+  }, [layout, rf, d]);
   const fitAll = useCallback(() => rf.fitView({ duration: 900, padding: { top: "140px", bottom: "24px", left: "24px", right: "24px" }, minZoom: 0.005 }), [rf]);
   const goRoot = useCallback(() => goTo(ds.meta.root), [goTo, ds.meta.root]);
   const prevRoot = useRef(ds.meta.root);

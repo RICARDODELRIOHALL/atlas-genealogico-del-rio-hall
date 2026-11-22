@@ -20,9 +20,38 @@ describe("Generated genealogy application", () => {
     const mod = await import("@/data/atlas.json");
     expect(ds).toEqual(structuredClone((mod.default ?? mod) as unknown));
     expect(ds.persons.map((person) => person.id)).toContain(ds.meta.root);
-    expect(ds.persons).toHaveLength(2952);
-    expect(ds.links).toHaveLength(6396);
+    expect(ds.persons).toHaveLength(2954);
+    expect(ds.links).toHaveLength(6400);
     expect(ds.unions).toHaveLength(737);
+  });
+
+  it("includes the two user-authorized siblings and links them to I1's recorded parents", async () => {
+    const ds = await seedDataset();
+    const alberto = ds.persons.find((person) => person.id === "I3963");
+    const lucero = ds.persons.find((person) => person.id === "I3964");
+    expect(alberto).toMatchObject({ name: "Alberto del Rio Hall", birth: "17 MAR 1960" });
+    expect(lucero).toMatchObject({ name: "Lucero de Rio Hall", birth: "27 APR 1967" });
+    for (const personId of ["I3963", "I3964"]) {
+      expect(ds.links.filter((link) => link.child === personId).map((link) => `${link.role}:${link.parent}`).sort())
+        .toEqual(["madre:I2", "padre:I3"]);
+    }
+    expect(ds.meta.appliedUpdates).toContain("sibling-update:alberto-del-rio-hall:lucero-de-rio-hall:20261122");
+    const derived = derive(ds);
+    for (const personId of ["I3963", "I3964"]) {
+      expect(derived.generation.get(personId)).toEqual([1]);
+      expect(derived.branches.get(personId)).toEqual(["Hermanos"]);
+      expect(findPath(derived, personId, "I1")).not.toBeNull();
+    }
+    expect(toGedcom(ds, derived)).not.toMatch(/1 _FSFTID\s*\n/);
+    const adjacent = new Map<string, Set<string>>();
+    for (const link of ds.links) {
+      (adjacent.get(link.child) ?? adjacent.set(link.child, new Set()).get(link.child)!).add(link.parent);
+      (adjacent.get(link.parent) ?? adjacent.set(link.parent, new Set()).get(link.parent)!).add(link.child);
+    }
+    const seen = new Set<string>([ds.meta.root]);
+    const queue = [ds.meta.root];
+    while (queue.length) for (const next of adjacent.get(queue.shift()!) ?? []) if (!seen.has(next)) { seen.add(next); queue.push(next); }
+    expect(seen.size).toBe(ds.persons.length);
   });
 
   it("contains both transcribed branches with all source endpoints and evidence", async () => {

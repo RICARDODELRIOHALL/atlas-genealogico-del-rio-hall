@@ -34,7 +34,8 @@ export function toGedcom(ds: Dataset, d: Derived): string {
     for (const n of p.altNames) L.push(`1 NAME ${n}`, "2 TYPE aka");
     if (p.sex) L.push(`1 SEX ${p.sex}`);
     L.push(...ev("BIRT", p.birth, p.birthPlace), ...ev("DEAT", p.death, p.deathPlace), ...ev("BAPM", p.baptism), ...ev("BURI", p.burial));
-    L.push(`1 _FSFTID ${p.fsId}`, `1 REFN ${p.fsId}`, "2 TYPE FamilySearch", `1 NOTE Fuentes: ${p.sources.join(", ")}. Sin verificación documental original.`);
+    if (p.fsId) L.push(`1 _FSFTID ${p.fsId}`, `1 REFN ${p.fsId}`, "2 TYPE FamilySearch");
+    L.push(`1 NOTE Fuentes: ${p.sources.join(", ")}. Sin verificación documental original.`);
     for (const n of p.notes) L.push(`1 NOTE ${n}`);
     fams.forEach((f) => { if (f.children.includes(p.id)) L.push(`1 FAMC ${f.id}`); if (f.parents.includes(p.id)) L.push(`1 FAMS ${f.id}`); });
   }
@@ -78,8 +79,8 @@ export function personLines(d: Derived, p: Person): [string, string][] {
   return [
     ["Nombres alternativos", p.altNames.join("; ")], ["Nacimiento", p.birth], ["Lugar de nacimiento", p.birthPlace ?? ""], ["Bautizo", p.baptism], ["Fallecimiento", p.death], ["Lugar de fallecimiento", p.deathPlace ?? ""], ["Entierro", p.burial],
     ["Matrimonio", p.marriage], ["Lugar de matrimonio", p.marriagePlace ?? ""], ["Cónyuge(s)", sp.join("; ")], ["Progenitores", ps.join("; ")], ["Hijos registrados", kids.join("; ")],
-    ["Generación", g ? `G${g.join(", G")}` : ""], ["Rama", (d.branches.get(p.id) ?? []).join(", ")], ["FamilySearch", `${p.fsId} – ${fsUrl(p.fsId)}`],
-    ["Fuentes", p.sources.join(", ")], ["Verificación", p.verification === "documento-original" ? "Verificado con documento original" : p.verification === "transcripcion-visual" ? "Transcripción visual; sin verificación documental" : p.sources.includes("secuencia-parejas-imagen") ? "FamilySearch y transcripción visual; pendiente de cotejo documental" : "Solo FamilySearch; pendiente de cotejo documental"],
+    ["Generación", g ? `G${g.join(", G")}` : ""], ["Rama", (d.branches.get(p.id) ?? []).join(", ")], [p.fsId ? "FamilySearch" : "ID local", p.fsId ? `${p.fsId} – ${fsUrl(p.fsId)}` : p.id],
+    ["Fuentes", p.sources.join(", ")], ["Verificación", p.sources.some((s) => s.startsWith("user-report:")) ? "Declaración directa del usuario; sin verificación documental" : p.verification === "documento-original" ? "Verificado con documento original" : p.verification === "transcripcion-visual" ? "Transcripción visual; sin verificación documental" : p.sources.includes("secuencia-parejas-imagen") ? "FamilySearch y transcripción visual; pendiente de cotejo documental" : "Solo FamilySearch; pendiente de cotejo documental"],
     ["Observaciones", p.notes.join(" ")],
   ];
 }
@@ -87,12 +88,12 @@ export function personLines(d: Derived, p: Person): [string, string][] {
 export function personPdf(d: Derived, p: Person) {
   const w = pdfWriter(p.name);
   for (const [k, v] of personLines(d, p)) w.line(`${k}: ${v || "Sin información"}`);
-  w.doc.save(`ficha_${p.fsId}.pdf`);
+  w.doc.save(`ficha_${p.fsId || p.id}.pdf`);
 }
 
 export function branchPdf(d: Derived, id: string) {
   const p = d.byId.get(id)!; const anc = ancestorsOf(d, id);
-  const w = pdfWriter(`Ascendencia de ${p.name} (${p.fsId})`);
+  const w = pdfWriter(`Ascendencia de ${p.name} (${p.fsId || p.id})`);
   w.line(`${anc.size} antepasados registrados. Datos procedentes de FamilySearch; sin verificación documental original.`, 9);
   const dist = new Map<string, number>([[id, 0]]); const q = [id];
   while (q.length) { const x = q.shift()!; for (const l of d.parents.get(x) ?? []) if (!dist.has(l.parent)) { dist.set(l.parent, dist.get(x)! + 1); q.push(l.parent); } }
@@ -103,8 +104,9 @@ export function branchPdf(d: Derived, id: string) {
     for (const k of byG.get(g)!) {
       const q2 = d.byId.get(k)!;
       const par = (d.parents.get(k) ?? []).map((l) => l.parent).join(", ");
-      w.line(`${q2.name} · ${q2.fsId}${life(q2) ? ` · ${life(q2)}` : ""}${par ? ` · progenitores: ${par}` : ""}`, 9, false, 10);
+      w.line(`${q2.name} · ${q2.fsId || q2.id}${life(q2) ? ` · ${life(q2)}` : ""}${par ? ` · progenitores: ${par}` : ""}`, 9, false, 10);
     }
   }
-  w.doc.save(`rama_${p.fsId}.pdf`);
+  w.doc.save(`rama_${p.fsId || p.id}.pdf`);
 }
+

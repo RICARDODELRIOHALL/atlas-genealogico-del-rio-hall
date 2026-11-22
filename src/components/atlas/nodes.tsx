@@ -17,7 +17,7 @@ export const PersonNode = memo(function PersonNode({ data }: NodeProps<Node<Pers
       <div className="nm">{p.name || "Sin nombre registrado"}</div>
       <div className="dt">{life(p)}</div>
       <div className="id flex items-center gap-2">
-        <span>{p.fsId}</span><span className="opacity-60">G{gen}</span>
+        <span>{p.fsId || p.id}</span><span className="opacity-60">G{gen}</span>
         {isRef && <span className="flag">↪ repetido</span>}
         {flagged && <span className="flag text-warn">● revisar</span>}
       </div>
@@ -49,3 +49,4 @@ export const BranchLabelNode = memo(function BranchLabelNode({ data }: NodeProps
 });
 
 export const nodeTypes = { person: PersonNode, union: UnionNode, glabel: GenLabelNode, blabel: BranchLabelNode };
+
