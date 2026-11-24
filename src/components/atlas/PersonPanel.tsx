@@ -26,6 +26,20 @@ export function PersonPanel({ d, id, appCount, onClose, goTo, actions, pathFrom,
   const unions = d.unionOf.get(id) ?? [];
   const issues = d.issues.filter((i) => i.ids.includes(id));
   const lines = Object.fromEntries(personLines(d, p));
+  const recordLinks = ([
+    ["birth", "Registro de nacimiento"],
+    ["baptism", "Registro de bautismo"],
+    ["death", "Registro de defunción"],
+    ["marriage", "Registro de matrimonio"],
+  ] as const).flatMap(([key, label]) => {
+    const value = p.recordLinks?.[key];
+    if (!value) return [];
+    try {
+      const url = new URL(value);
+      if (url.protocol !== "https:" && url.protocol !== "http:") return [];
+      return [{ label, href: url.href }];
+    } catch { return []; }
+  });
   const Field = ({ k, v }: { k: string; v?: string }) => (
     <div className="grid grid-cols-[120px_1fr] gap-2 py-1 text-sm">
       <div className="text-muted-foreground">{k}</div><div className={v ? "" : "italic text-muted-foreground/70"}>{v || "Sin información"}</div>
@@ -73,6 +87,14 @@ export function PersonPanel({ d, id, appCount, onClose, goTo, actions, pathFrom,
             <Field k="Sexo" v={p.sex === "M" ? "Hombre" : p.sex === "F" ? "Mujer" : ""} />
             <Field k="Apariciones" v={`${appCount} en el lienzo`} />
           </section>
+          {recordLinks.length > 0 && <section>
+            <h3 className="mb-2 text-xs uppercase tracking-widest text-gold">Registros vinculados</h3>
+            <div className="flex flex-wrap gap-2">
+              {recordLinks.map(({ label, href }) => <Button key={label} asChild size="sm" variant="outline">
+                <a href={href} target="_blank" rel="noopener noreferrer">{label} <ExternalLink className="ml-1 h-3.5 w-3.5" /></a>
+              </Button>)}
+            </div>
+          </section>}
           <section>
             <h3 className="mb-1 text-xs uppercase tracking-widest text-gold">Progenitores</h3>
             {parents.length ? parents.map((l) => <PersonLink key={l.parent} pid={l.parent} extra={l.role || "rol no indicado"} />) : <p className="text-sm italic text-muted-foreground">Sin información</p>}

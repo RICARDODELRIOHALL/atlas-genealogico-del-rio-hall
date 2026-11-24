@@ -4,6 +4,8 @@ export interface Person {
   id: string; fsId: string; name: string; altNames: string[]; sex: "" | "M" | "F";
   birth: string; death: string; marriage: string; baptism: string; burial: string;
   birthPlace?: string; deathPlace?: string; marriagePlace?: string;
+  /** Enlaces a registros de nacimiento, bautismo, defunción o matrimonio. */
+  recordLinks?: Partial<Record<"birth" | "baptism" | "death" | "marriage", string>>;
   notes: string[]; sources: SourceId[]; originals: OriginalRecord[];
   /** Estado documental: FamilySearch nunca equivale a verificación original */
   verification?: "familysearch" | "documento-original" | "transcripcion-visual";
