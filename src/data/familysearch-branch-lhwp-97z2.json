@@ -1,0 +1,619 @@
+{
+  "meta": {
+    "root": "",
+    "sources": [
+      {
+        "id": "familysearch-branch-lhwp-97z2",
+        "file": "FamilySearch Family Tree: LHWP-6YX + L8WY-WSB → 97Z2-2CB",
+        "kind": "Transcripción de pantalla del árbol y la vista de parentesco",
+        "note": "Ruta observada en FamilySearch desde Ricardo del Rio (LKRN-S2X): Louis IX (LHWP-6YX) y Marguerite de Provence (L8WY-WSB) → Philippe III (9HMM-VB6) y Maria van Brabant (2Z3H-71Z) → Marguérite de France (9HB6-J38) y Edward I (LYWX-CBR) → Thomas of Brotherton (9WZT-R79) y Alice de Hayles (LYGH-DVF) → Margaret of Brotherton (LTKH-4FN) y John de Segrave (937J-D9D) → Elizabeth de Segrave (LTDJ-X1W) y John de Mowbray (LBGD-P8S) → Thomas Mowbray (L8BX-ZHN) → Isabel de Mowbray (K4F4-GKQ) → Elizabeth Berkeley (GY17-WHS) → Margaret Burdet (GTVH-HX1) → Thomas Cave (97Z2-2CB). Vínculos y nombres transcritos de FamilySearch; no cotejados aquí con registros originales. La vista consultada muestra a Margaret of Brotherton como hija de Thomas of Brotherton y Alice de Hayles; el Atlas publicado conserva una atribución anterior distinta, que se mantiene como procedencia histórica y no se usa como filiación activa."
+      }
+    ],
+    "appliedUpdates": [
+      "familysearch-branch-lhwp-6yx-to-97z2-2cb-2026-11-25"
+    ]
+  },
+  "persons": [
+    {
+      "id": "FS:LBGD-P8S",
+      "fsId": "LBGD-P8S",
+      "name": "John de Mowbray",
+      "altNames": [
+        "John de Mowbray"
+      ],
+      "sex": "M",
+      "birth": "1340",
+      "birthPlace": "",
+      "death": "1368",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "LBGD-P8S",
+            "name": "John de Mowbray",
+            "sex": "M",
+            "birth": "1340",
+            "death": "1368",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/LBGD-P8S",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    },
+    {
+      "id": "FS:LTDJ-X1W",
+      "fsId": "LTDJ-X1W",
+      "name": "Elizabeth de Segrave",
+      "altNames": [
+        "Elizabeth de Segrave"
+      ],
+      "sex": "F",
+      "birth": "1338",
+      "birthPlace": "",
+      "death": "1368",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "LTDJ-X1W",
+            "name": "Elizabeth de Segrave",
+            "sex": "F",
+            "birth": "1338",
+            "death": "1368",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/LTDJ-X1W",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    },
+    {
+      "id": "FS:937J-D9D",
+      "fsId": "937J-D9D",
+      "name": "Sir John de Segrave 4th Baron Segrave",
+      "altNames": [
+        "Sir John de Segrave 4th Baron Segrave"
+      ],
+      "sex": "M",
+      "birth": "1315",
+      "birthPlace": "",
+      "death": "1353",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "937J-D9D",
+            "name": "Sir John de Segrave 4th Baron Segrave",
+            "sex": "M",
+            "birth": "1315",
+            "death": "1353",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/937J-D9D",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    },
+    {
+      "id": "FS:LTKH-4FN",
+      "fsId": "LTKH-4FN",
+      "name": "Margaret of Brotherton Duchess of Norfolk",
+      "altNames": [
+        "Margaret of Brotherton Duchess of Norfolk"
+      ],
+      "sex": "F",
+      "birth": "1322",
+      "birthPlace": "",
+      "death": "1399",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "LTKH-4FN",
+            "name": "Margaret of Brotherton Duchess of Norfolk",
+            "sex": "F",
+            "birth": "1322",
+            "death": "1399",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/LTKH-4FN",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    },
+    {
+      "id": "FS:9WZT-R79",
+      "fsId": "9WZT-R79",
+      "name": "Thomas of Brotherton, Earl of Norfolk",
+      "altNames": [
+        "Thomas of Brotherton, Earl of Norfolk"
+      ],
+      "sex": "M",
+      "birth": "1300",
+      "birthPlace": "",
+      "death": "1338",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "9WZT-R79",
+            "name": "Thomas of Brotherton, Earl of Norfolk",
+            "sex": "M",
+            "birth": "1300",
+            "death": "1338",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/9WZT-R79",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    },
+    {
+      "id": "FS:LYGH-DVF",
+      "fsId": "LYGH-DVF",
+      "name": "Alice de Hayles",
+      "altNames": [
+        "Alice de Hayles"
+      ],
+      "sex": "F",
+      "birth": "1300",
+      "birthPlace": "",
+      "death": "1326",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "LYGH-DVF",
+            "name": "Alice de Hayles",
+            "sex": "F",
+            "birth": "1300",
+            "death": "1326",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/LYGH-DVF",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    },
+    {
+      "id": "FS:LYWX-CBR",
+      "fsId": "LYWX-CBR",
+      "name": "King Edward I of England",
+      "altNames": [
+        "King Edward I of England"
+      ],
+      "sex": "M",
+      "birth": "1239",
+      "birthPlace": "",
+      "death": "1307",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "LYWX-CBR",
+            "name": "King Edward I of England",
+            "sex": "M",
+            "birth": "1239",
+            "death": "1307",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/LYWX-CBR",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    },
+    {
+      "id": "FS:9HB6-J38",
+      "fsId": "9HB6-J38",
+      "name": "Duchesse d'Aquitaine Marguérite de France Reine d'Angleterre",
+      "altNames": [
+        "Duchesse d'Aquitaine Marguérite de France Reine d'Angleterre"
+      ],
+      "sex": "F",
+      "birth": "1279",
+      "birthPlace": "",
+      "death": "1318",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "9HB6-J38",
+            "name": "Duchesse d'Aquitaine Marguérite de France Reine d'Angleterre",
+            "sex": "F",
+            "birth": "1279",
+            "death": "1318",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/9HB6-J38",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    },
+    {
+      "id": "FS:9HMM-VB6",
+      "fsId": "9HMM-VB6",
+      "name": "Philippe III 'le Hardi' Roi de France",
+      "altNames": [
+        "Philippe III 'le Hardi' Roi de France"
+      ],
+      "sex": "M",
+      "birth": "1245",
+      "birthPlace": "",
+      "death": "1285",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "9HMM-VB6",
+            "name": "Philippe III 'le Hardi' Roi de France",
+            "sex": "M",
+            "birth": "1245",
+            "death": "1285",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/9HMM-VB6",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    },
+    {
+      "id": "FS:2Z3H-71Z",
+      "fsId": "2Z3H-71Z",
+      "name": "Maria van Brabant koningin van Frankrijk",
+      "altNames": [
+        "Maria van Brabant koningin van Frankrijk"
+      ],
+      "sex": "F",
+      "birth": "1260",
+      "birthPlace": "",
+      "death": "1322",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "2Z3H-71Z",
+            "name": "Maria van Brabant koningin van Frankrijk",
+            "sex": "F",
+            "birth": "1260",
+            "death": "1322",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/2Z3H-71Z",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    },
+    {
+      "id": "FS:LHWP-6YX",
+      "fsId": "LHWP-6YX",
+      "name": "Louis IX \" le Prud'homme\" Roi de France",
+      "altNames": [
+        "Louis IX \" le Prud'homme\" Roi de France"
+      ],
+      "sex": "M",
+      "birth": "1214",
+      "birthPlace": "",
+      "death": "1270",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "LHWP-6YX",
+            "name": "Louis IX \" le Prud'homme\" Roi de France",
+            "sex": "M",
+            "birth": "1214",
+            "death": "1270",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/LHWP-6YX",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    },
+    {
+      "id": "FS:L8WY-WSB",
+      "fsId": "L8WY-WSB",
+      "name": "Marguerite de Provence Reine de France",
+      "altNames": [
+        "Marguerite de Provence Reine de France"
+      ],
+      "sex": "F",
+      "birth": "1221",
+      "birthPlace": "",
+      "death": "1295",
+      "deathPlace": "",
+      "burial": "",
+      "baptism": "",
+      "notes": [],
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ],
+      "originals": [
+        {
+          "source": "familysearch-branch-lhwp-97z2",
+          "record": {
+            "familySearchId": "L8WY-WSB",
+            "name": "Marguerite de Provence Reine de France",
+            "sex": "F",
+            "birth": "1221",
+            "death": "1295",
+            "profileUrl": "https://www.familysearch.org/es/tree/person/details/L8WY-WSB",
+            "transcribedFrom": "FamilySearch Family Tree · transcripción de la vista del parentesco",
+            "dateCaptured": "2026-11-25"
+          }
+        }
+      ],
+      "marriage": "",
+      "marriagePlace": "",
+      "verification": "transcripcion-visual"
+    }
+  ],
+  "links": [
+    {
+      "child": "I3469",
+      "parent": "FS:LBGD-P8S",
+      "role": "padre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "child": "I3469",
+      "parent": "FS:LTDJ-X1W",
+      "role": "madre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "child": "FS:LTDJ-X1W",
+      "parent": "FS:937J-D9D",
+      "role": "padre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "child": "FS:LTDJ-X1W",
+      "parent": "FS:LTKH-4FN",
+      "role": "madre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "child": "FS:LTKH-4FN",
+      "parent": "FS:9WZT-R79",
+      "role": "padre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "child": "FS:LTKH-4FN",
+      "parent": "FS:LYGH-DVF",
+      "role": "madre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "child": "FS:9WZT-R79",
+      "parent": "FS:LYWX-CBR",
+      "role": "padre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "child": "FS:9WZT-R79",
+      "parent": "FS:9HB6-J38",
+      "role": "madre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "child": "FS:9HB6-J38",
+      "parent": "FS:9HMM-VB6",
+      "role": "padre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "child": "FS:9HB6-J38",
+      "parent": "FS:2Z3H-71Z",
+      "role": "madre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "child": "FS:9HMM-VB6",
+      "parent": "FS:LHWP-6YX",
+      "role": "padre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "child": "FS:9HMM-VB6",
+      "parent": "FS:L8WY-WSB",
+      "role": "madre",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    }
+  ],
+  "pendingRefs": [],
+  "issues": [],
+  "unions": [
+    {
+      "a": "FS:LBGD-P8S",
+      "b": "FS:LTDJ-X1W",
+      "marriage": "",
+      "marriagePlace": "",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "a": "FS:937J-D9D",
+      "b": "FS:LTKH-4FN",
+      "marriage": "",
+      "marriagePlace": "",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "a": "FS:9WZT-R79",
+      "b": "FS:LYGH-DVF",
+      "marriage": "",
+      "marriagePlace": "",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "a": "FS:LYWX-CBR",
+      "b": "FS:9HB6-J38",
+      "marriage": "",
+      "marriagePlace": "",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "a": "FS:9HMM-VB6",
+      "b": "FS:2Z3H-71Z",
+      "marriage": "",
+      "marriagePlace": "",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    },
+    {
+      "a": "FS:LHWP-6YX",
+      "b": "FS:L8WY-WSB",
+      "marriage": "",
+      "marriagePlace": "",
+      "sources": [
+        "familysearch-branch-lhwp-97z2"
+      ]
+    }
+  ]
+}
+

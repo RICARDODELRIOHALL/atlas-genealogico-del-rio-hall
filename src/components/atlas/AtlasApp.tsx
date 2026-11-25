@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { derive, ancestorsOf, descendantsOf, findPath } from "@/lib/genealogy/derive";
 import { computeLayout, CARD_H, CARD_W } from "@/lib/genealogy/layout";
 import { loadDataset, prepareBundledUpdate, saveDataset, saveDatasetWithBackup, seedDataset } from "@/lib/genealogy/store";
+import { merge as mergeDataset } from "@/lib/genealogy/importer";
 import type { Dataset } from "@/lib/genealogy/types";
 import { APP_CONFIG } from "@/lib/app-config";
 import { nodeTypes, BRANCH_LABEL_W, BRANCH_LABEL_H, GEN_LABEL_H, type PersonNodeData } from "./nodes";
@@ -23,15 +24,42 @@ export default function AtlasApp() {
   useEffect(() => {
     (async () => {
       try {
-        let d = await loadDataset();
-        const bundled = await seedDataset();
-        if (!d) { d = bundled; await saveDataset(d); }
-        else {
-          const update = prepareBundledUpdate(d, bundled);
-          if (update.backupKey) {
-            await saveDatasetWithBackup(update.dataset, update.backupKey);
-            d = update.dataset;
+        const module = await import("@/data/familysearch-branch-lhwp-97z2.json");
+        const branch = structuredClone((module.default ?? module) as unknown as Dataset);
+        const base = await seedDataset();
+        const bundled = mergeDataset(base, branch, "familysearch-branch-lhwp-97z2", "FamilySearch · LHWP-6YX a 97Z2-2CB").ds;
+        const archivePriorParentage = (dataset: Dataset) => {
+          const childId = "FS:LTKH-4FN";
+          const outdatedParentIds = new Set(["FS:LYWX-CBR", "FS:9CQX-DXX"]);
+          const priorLinks = dataset.links.filter((link) => link.child === childId && outdatedParentIds.has(link.parent));
+          if (!priorLinks.length) return false;
+          const person = dataset.persons.find((candidate) => candidate.id === childId);
+          if (!person) return false;
+          dataset.links = dataset.links.filter((link) => !priorLinks.includes(link));
+          for (const link of priorLinks) {
+            const record = {
+              type: "previously-published-parent-link",
+              status: "preserved-as-provenance-not-active",
+              reason: "La vista de parentesco consultada el 2026-11-25 muestra a Margaret of Brotherton como hija de Thomas of Brotherton y Alice de Hayles.",
+              originalLink: structuredClone(link),
+            };
+            if (!person.originals.some((original) => JSON.stringify(original.record) === JSON.stringify(record))) {
+              person.originals.push({ source: link.sources[0] ?? "familysearch-parentage-history", record });
+            }
           }
+          return true;
+        };
+        let d = await loadDataset();
+        if (!d) {
+          d = bundled;
+          archivePriorParentage(d);
+          await saveDataset(d);
+        } else {
+          const update = prepareBundledUpdate(d, bundled);
+          d = update.dataset;
+          const archived = archivePriorParentage(d);
+          if (update.backupKey) await saveDatasetWithBackup(d, update.backupKey);
+          else if (archived) await saveDatasetWithBackup(d, "backup:parentage-claim-before-familysearch-2026-11-25");
         }
         setDs(d);
       } catch (e) { setErr(String(e)); }
