@@ -84,7 +84,7 @@ export function PersonPanel({ d, id, appCount, onClose, goTo, actions, pathFrom,
             <Field k="Fallecimiento" v={p.death} /><Field k="Lugar de fallecimiento" v={p.deathPlace} /><Field k="Entierro" v={p.burial} />
             <Field k="Matrimonio" v={p.marriage} /><Field k="Lugar de matrimonio" v={p.marriagePlace} />
             <Field k="Sexo" v={p.sex === "M" ? "Hombre" : p.sex === "F" ? "Mujer" : ""} />
-            <Field k="Apariciones" v={`${appCount} en el lienzo`} />
+            <Field k="Tarjetas visibles" v={`${appCount} (una por perfil)`} />
           </section>
           {recordLinks.length > 0 && <section>
             <h3 className="mb-2 text-xs uppercase tracking-widest text-gold">Registros vinculados</h3>

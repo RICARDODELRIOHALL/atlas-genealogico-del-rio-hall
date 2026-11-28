@@ -99,61 +99,104 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
     return m;
   }, [branchList]);
 
+  const uniqueApps = useMemo(() => {
+    const byId = new Map<string, (typeof layout.apps)[number]>();
+    for (const a of layout.apps) {
+      const prior = byId.get(a.personId);
+      if (!prior || (prior.isRef && !a.isRef)) byId.set(a.personId, a);
+    }
+    return [...byId.values()];
+  }, [layout]);
+  const canonicalByPerson = useMemo(() => new Map(uniqueApps.map((a) => [a.personId, a])), [uniqueApps]);
+  const canonicalKeyByAppearance = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const a of layout.apps) m.set(a.key, canonicalByPerson.get(a.personId)!.key);
+    return m;
+  }, [layout, canonicalByPerson]);
+  const canonicalByKey = useMemo(() => new Map(uniqueApps.map((a) => [a.key, a])), [uniqueApps]);
+  const personBranches = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    for (const a of layout.apps) {
+      const set = m.get(a.personId) ?? new Set<string>();
+      set.add(appBranch.get(a.key)!);
+      m.set(a.personId, set);
+    }
+    return m;
+  }, [layout, appBranch]);
+  const displayUnions = useMemo(() => {
+    const grouped = new Map<string, { key: string; childKeys: string[]; parentKeys: string[] }>();
+    for (const union of layout.unions) {
+      const parentKeys = [...new Set(union.parentKeys.map((key) => canonicalKeyByAppearance.get(key)).filter(Boolean))].sort();
+      const childKeys = [...new Set(union.childKeys.map((key) => canonicalKeyByAppearance.get(key)).filter(Boolean))];
+      if (!parentKeys.length || !childKeys.length) continue;
+      const signature = parentKeys.join("|");
+      const group = grouped.get(signature) ?? { key: `j${parentKeys.join("+")}`, parentKeys, childKeys: [] };
+      for (const childKey of childKeys) if (!group.childKeys.includes(childKey)) group.childKeys.push(childKey);
+      grouped.set(signature, group);
+    }
+    return [...grouped.values()].map((union) => {
+      const parents = union.parentKeys.map((key) => canonicalByKey.get(key)!);
+      const children = union.childKeys.map((key) => canonicalByKey.get(key)!);
+      const childRight = children.reduce((sum, a) => sum + a.x + a.width, 0) / children.length;
+      const parentLeft = parents.reduce((sum, a) => sum + a.x, 0) / parents.length;
+      return { ...union, x: (childRight + parentLeft) / 2, y: parents.reduce((sum, a) => sum + a.y, 0) / parents.length };
+    });
+  }, [layout, canonicalKeyByAppearance, canonicalByKey]);
   const hl = useMemo(() => new Set(mode.kind === "none" ? [] : mode.ids), [mode]);
   const baseNodes = useMemo<Node[]>(() => {
-    const n: Node[] = layout.apps.map((a) => ({
+    const n: Node[] = uniqueApps.map((a) => ({
       id: a.key, type: "person", position: { x: a.x, y: a.y - a.height / 2 }, width: a.width, height: a.height, draggable: false, connectable: false,
-      data: { p: d.byId.get(a.personId)!, gen: a.gen, isRef: a.isRef, branch: appBranch.get(a.key)!, color: BRANCH_COLORS[appBranch.get(a.key)!] } satisfies PersonNodeData,
+      data: { p: d.byId.get(a.personId)!, gen: a.gen, isRef: false, branch: appBranch.get(a.key)!, color: BRANCH_COLORS[appBranch.get(a.key)!] } satisfies PersonNodeData,
     }));
-    for (const u of layout.unions) n.push({ id: u.key, type: "union", position: { x: u.x - 4, y: u.y - 4 }, draggable: false, selectable: false, data: {} });
+    for (const u of displayUnions) n.push({ id: u.key, type: "union", position: { x: u.x - 4, y: u.y - 4 }, draggable: false, selectable: false, data: {} });
     const top = layout.bounds.minY;
     for (const c of layout.columns) n.push({ id: `g${c.gen}`, type: "glabel", position: { x: c.x, y: top - GEN_LABEL_H - 80 },
       width: CARD_W, height: GEN_LABEL_H, draggable: false, selectable: false, data: { gen: c.gen, count: c.count } });
-    for (const a of layout.apps) if (a.depth === 2 && a.group === "main") {
+    for (const a of uniqueApps) if (a.depth === 2 && a.group === "main") {
       const b = appBranch.get(a.key)!;
       n.push({ id: `b${a.key}`, type: "blabel", position: { x: layout.bounds.minX - BRANCH_LABEL_W - 180, y: a.y - BRANCH_LABEL_H / 2 },
         width: BRANCH_LABEL_W, height: BRANCH_LABEL_H, draggable: false, selectable: false,
         data: { label: b, color: BRANCH_COLORS[b] ?? "var(--branch-other)" } });
     }
     return n;
-  }, [layout, d, appBranch, BRANCH_COLORS]);
+  }, [layout, d, appBranch, BRANCH_COLORS, uniqueApps, displayUnions]);
   const baseEdges = useMemo<Edge[]>(() => {
     const e: Edge[] = [];
-    for (const u of layout.unions) {
+    for (const u of displayUnions) {
       for (const childKey of u.childKeys) e.push({ id: `e${u.key}-${childKey}`, source: childKey, target: u.key, type: "smoothstep", selectable: false, focusable: false });
       for (const p of u.parentKeys) e.push({ id: `e${u.key}-${p}`, source: u.key, target: p, type: "step", selectable: false, focusable: false });
     }
     return e;
-  }, [layout]);
-  const appPerson = useMemo(() => new Map(layout.apps.map((a) => [a.key, a.personId])), [layout]);
-  const unionByKey = useMemo(() => new Map(layout.unions.map((u) => [u.key, u])), [layout]);
+  }, [displayUnions]);
+  const appPerson = useMemo(() => new Map(uniqueApps.map((a) => [a.key, a.personId])), [uniqueApps]);
+  const unionByKey = useMemo(() => new Map(displayUnions.map((u) => [u.key, u])), [displayUnions]);
+  const isPersonHidden = (personId: string) => [...(personBranches.get(personId) ?? [])].every((branch) => hidden.has(branch));
   const nodes = useMemo(() => baseNodes.map((n) => {
     if (n.type !== "person") {
       if (n.type === "blabel") return { ...n, hidden: hidden.has(n.data.label) };
-      if (n.type === "union") { const u = unionByKey.get(n.id); return u && u.childKeys.every((childKey) => hidden.has(appBranch.get(childKey)!)) && u.parentKeys.every((k) => hidden.has(appBranch.get(k)!)) ? { ...n, hidden: true } : n; }
+      if (n.type === "union") { const u = unionByKey.get(n.id); return u && u.childKeys.every((key) => isPersonHidden(appPerson.get(key)!)) && u.parentKeys.every((key) => isPersonHidden(appPerson.get(key)!)) ? { ...n, hidden: true } : n; }
       return n;
     }
     const pid = appPerson.get(n.id)!;
     const cls = [hl.has(pid) ? "hl" : "", selApp === n.id || (selected === pid && !selApp) ? "sel" : selected === pid ? "hl" : ""].join(" ").trim();
-    const hide = hidden.has(appBranch.get(n.id)!);
+    const hide = isPersonHidden(pid);
     return cls || hide ? { ...n, className: cls, hidden: hide } : n;
-  }), [baseNodes, hl, selected, selApp, hidden, appBranch, appPerson, unionByKey]);
+  }), [baseNodes, hl, selected, selApp, hidden, appBranch, appPerson, unionByKey, personBranches]);
   const edges = useMemo(() => {
     if (!hl.size) return baseEdges;
     return baseEdges.map((e) => {
       const s = appPerson.get(e.source) ?? null, t = appPerson.get(e.target) ?? null;
-      const ok = (x: string | null, key: string) => (x ? hl.has(x) : (() => { const u = unionByKey.get(key); return !!u && u.childKeys.some((childKey) => hl.has(appPerson.get(childKey)!)) && u.parentKeys.some((k) => hl.has(appPerson.get(k)!)); })());
+      const ok = (x: string | null, key: string) => (x ? hl.has(x) : (() => { const u = unionByKey.get(key); return !!u && u.childKeys.some((childKey) => hl.has(appPerson.get(childKey)!)) && u.parentKeys.some((parentKey) => hl.has(appPerson.get(parentKey)!)); })());
       return ok(s, e.source) && ok(t, e.target) ? { ...e, className: "hl" } : e;
     });
   }, [baseEdges, hl, appPerson, unionByKey]);
 
   const goTo = useCallback((pid: string, appKey?: string) => {
-    const apps = layout.byPerson.get(pid);
-    if (!apps?.length) { if (d.byId.has(pid)) { setSelected(pid); setSelApp(null); } return; }
-    const a = (appKey && apps.find((x) => x.key === appKey)) || apps.find((x) => !x.isRef) || apps[0];
+    const a = canonicalByPerson.get(pid);
+    if (!a) { if (d.byId.has(pid)) { setSelected(pid); setSelApp(null); } return; }
     setSelected(pid); setSelApp(a.key);
-    rf.setCenter(a.x + CARD_W / 2, a.y, { zoom: Math.max(rf.getZoom(), 0.9), duration: 900 });
-  }, [layout, rf, d]);
+    rf.setCenter(a.x + a.width / 2, a.y, { zoom: Math.max(rf.getZoom(), 0.9), duration: 900 });
+  }, [canonicalByPerson, rf, d]);
   const fitAll = useCallback(() => rf.fitView({ duration: 900, padding: { top: "140px", bottom: "24px", left: "24px", right: "24px" }, minZoom: 0.005 }), [rf]);
   const goRoot = useCallback(() => goTo(ds.meta.root), [goTo, ds.meta.root]);
   const prevRoot = useRef(ds.meta.root);
@@ -213,7 +256,7 @@ function Atlas({ ds, setDs }: { ds: Dataset; setDs: (d: Dataset) => Promise<void
         setDs={setDs} selected={selected} />
       {ds.persons.length === 0 && <EmptyState onImport={() => document.getElementById("atlas-import-input")?.click()} />}
       {selected && d.byId.has(selected) && (
-        <PersonPanel d={d} id={selected} appCount={layout.byPerson.get(selected)?.length ?? 0} onClose={() => { setSelected(null); setSelApp(null); }}
+        <PersonPanel d={d} id={selected} appCount={1} onClose={() => { setSelected(null); setSelApp(null); }}
           goTo={goTo} actions={actions} pathFrom={pathFrom} setPathFrom={setPathFrom} />
       )}
     </div>
