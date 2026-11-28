@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { Dataset, Derived } from "@/lib/genealogy/types";
@@ -13,7 +13,6 @@ const Stat = ({ k, v }: { k: string; v: number | string }) => (
 
 export function StatsDialog({ open, onOpenChange, ds, d, layout }: { open: boolean; onOpenChange: (o: boolean) => void; ds: Dataset; d: Derived; layout: LayoutResult }) {
   const branches = new Set([...d.branches.values()].flat());
-  const pend = d.issues.filter((i) => i.severity !== "info").length;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="max-w-2xl">
       <DialogHeader><DialogTitle className="font-serif text-2xl">Estadísticas</DialogTitle></DialogHeader>
@@ -21,32 +20,7 @@ export function StatsDialog({ open, onOpenChange, ds, d, layout }: { open: boole
         <Stat k="Personas únicas" v={ds.persons.length} /><Stat k="Apariciones visuales" v={layout.apps.length} />
         <Stat k="Generaciones" v={layout.columns.length} /><Stat k="Parejas" v={d.unions.length} />
         <Stat k="Vínculos padre/hijo" v={ds.links.length} /><Stat k="Ramas" v={branches.size} />
-        <Stat k="Pendientes de revisión" v={pend} /><Stat k="Fuentes" v={ds.meta.sources.length} />
-      </div>
-    </DialogContent></Dialog>
-  );
-}
-
-export function IntegrityDialog({ open, onOpenChange, ds, d, goTo }: { open: boolean; onOpenChange: (o: boolean) => void; ds: Dataset; d: Derived; goTo: (id: string) => void }) {
-  const [kind, setKind] = useState<string | null>(null);
-  const counts = useMemo(() => { const m = new Map<string, number>(); d.issues.forEach((i) => m.set(i.kind, (m.get(i.kind) ?? 0) + 1)); return [...m]; }, [d]);
-  const list = d.issues.filter((i) => !kind || i.kind === kind).slice(0, 400);
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="max-h-[85vh] max-w-3xl overflow-auto">
-      <DialogHeader><DialogTitle className="font-serif text-2xl">Informe de integridad</DialogTitle>
-        <DialogDescription>{ds.persons.length} personas · {ds.links.length} vínculos · {ds.pendingRefs.length} referencias sin ficha. {ds.meta.note} {ds.meta.missingCsv}</DialogDescription></DialogHeader>
-      <div className="text-xs text-muted-foreground">Fuentes: {ds.meta.sources.map((s) => s.file).join(" · ")}</div>
-      <div className="flex flex-wrap gap-1.5">
-        <Button size="sm" variant={kind ? "outline" : "default"} onClick={() => setKind(null)}>Todos ({d.issues.length})</Button>
-        {counts.map(([k, n]) => <Button key={k} size="sm" variant={kind === k ? "default" : "outline"} onClick={() => setKind(k)}>{k} ({n})</Button>)}
-      </div>
-      <div className="space-y-1.5">
-        {list.map((i, n) => (
-          <div key={n} className="rounded border border-border p-2 text-sm">
-            <span className={i.severity === "info" ? "text-muted-foreground" : "text-warn"}>[{i.kind}]</span> {i.msg}
-            <div className="mt-1 flex flex-wrap gap-1">{i.ids.filter((x) => d.byId.has(x)).slice(0, 6).map((x) => <button key={x} className="font-mono text-xs text-gold hover:underline" onClick={() => goTo(x)}>{x}</button>)}</div>
-          </div>
-        ))}
+        <Stat k="Fuentes" v={ds.meta.sources.length} />
       </div>
     </DialogContent></Dialog>
   );
